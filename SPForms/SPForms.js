@@ -19,9 +19,11 @@ var SPForms;
 
         FormManager.prototype.initialize = function () {
             var _this = this;
-            this.settings = JSON.parse(this.form.attr("data-form-settings"));
-
-            this.initJQueryUIDefaults();
+            var settingsAttr = this.form.attr("data-form-settings");
+            if (settingsAttr !== null && settingsAttr !== undefined)
+                this.settings = JSON.parse(settingsAttr);
+            else
+                this.settings = null;
 
             // initialize all form fields
             this.form.find("[data-form-field]").each(function (i, f) {
@@ -154,7 +156,7 @@ var SPForms;
             var list = web.get_lists().getByTitle(listName);
 
             // check for max participants before adding the new item
-            if (this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1) {
+            if (this.settings === null || this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1) {
                 this.createListItemInternal(deferred, context, list);
             } else {
                 context.load(list, 'ItemCount');
@@ -181,6 +183,11 @@ var SPForms;
                 var fieldName = field.get_name();
                 var content = field.get_value();
 
+                if (field.get_type() === 3 /* PeoplePicker */) {
+                    var web = context.get_web();
+                    content = web.ensureUser(content);
+                }
+
                 listItem.set_item(fieldName, content);
             });
 
@@ -190,63 +197,6 @@ var SPForms;
             }, function (sender, args) {
                 deferred.reject(args.get_message());
             });
-        };
-
-        FormManager.prototype.initJQueryUIDefaults = function () {
-            $.datepicker.regional["de"] = {
-                clearText: "löschen",
-                clearStatus: "aktuelles Datum löschen",
-                closeText: "schließen",
-                closeStatus: "ohne Änderungen schließen",
-                prevText: "Zurück",
-                prevStatus: "letzten Monat zeigen",
-                nextText: "Vor",
-                nextStatus: "nächsten Monat zeigen",
-                currentText: "heute",
-                currentStatus: "",
-                monthNames: [
-                    "Januar",
-                    "Februar",
-                    "März",
-                    "April",
-                    "Mai",
-                    "Juni",
-                    "Juli",
-                    "August",
-                    "September",
-                    "Oktober",
-                    "November",
-                    "Dezember"
-                ],
-                monthNamesShort: [
-                    "Jan",
-                    "Feb",
-                    "Mär",
-                    "Apr",
-                    "Mai",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Okt",
-                    "Nov",
-                    "Dez"
-                ],
-                monthStatus: "anderen Monat anzeigen",
-                yearStatus: "anderes Jahr anzeigen",
-                weekHeader: "Wo",
-                weekStatus: "Woche des Monats",
-                dayNames: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
-                dayNamesShort: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-                dayNamesMin: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-                dayStatus: "Setze DD als ersten Wochentag",
-                dateStatus: "Wähle D, M d",
-                dateFormat: "dd.mm.yy",
-                firstDay: 1,
-                initStatus: "Datum auswählen",
-                isRTL: false
-            };
-            $.datepicker.setDefaults($.datepicker.regional["de"]);
         };
         return FormManager;
     })();
@@ -460,29 +410,43 @@ var SPForms;
                 var _this = this;
                 _super.call(this, internalField);
 
-                var ppMode = internalField.attr("data-form-peoplepicker");
-                if (ppMode === "2010") {
+                this.peoplePickerMode = internalField.attr("data-form-peoplepicker");
+                if (this.peoplePickerMode === "2010") {
                     this.internalField.prop("disabled", "disabled");
 
-                    this.peoplePicker = new SPForms.PeoplePicker2010(this.internalField.attr("id"));
+                    this.peoplePicker2010 = new SPForms.PeoplePicker2010(this.internalField.attr("id"));
                     var button = $('<img src="/Scripts/images/addressbook.gif" style="margin-left: 5px; vertical-align: bottom; cursor: pointer;" />');
                     button.click(function () {
-                        _this.peoplePicker.openPeoplePicker();
+                        _this.peoplePicker2010.openPeoplePicker();
                     });
 
                     this.internalField.after(button);
-                } else if (ppMode === "2013") {
+                } else if (this.peoplePickerMode === "2013") {
+                    var origId = this.internalField.attr("id");
+                    var divId = origId + "_div";
+
+                    this.internalField.hide();
+
+                    var div = $('<div id="' + divId + '"></div>');
+                    this.internalField.after(div);
+
+                    this.peoplePicker2013 = new SPForms.PeoplePicker2013(divId);
+                    this.peoplePicker2013.initAsync();
                 }
             }
             PeopleFormField.prototype.get_value = function () {
-                switch (this.internalField.attr("data-form-field-value")) {
-                    case "displayname":
-                        return this.internalField.attr("data-people-display");
-                    case "email":
-                        return this.internalField.attr("data-people-email");
-                    case "accountname":
-                    default:
-                        return this.internalField.attr("data-people-account");
+                if (this.peoplePickerMode === "2010") {
+                    switch (this.internalField.attr("data-form-peoplepicker-value")) {
+                        case "displayname":
+                            return this.internalField.attr("data-people-display");
+                        case "email":
+                            return this.internalField.attr("data-people-email");
+                        case "accountname":
+                        default:
+                            return this.internalField.attr("data-people-account");
+                    }
+                } else if (this.peoplePickerMode === "2013") {
+                    return this.peoplePicker2013.getSelectedAccountName();
                 }
             };
             return PeopleFormField;
@@ -551,14 +515,51 @@ var SPForms;
                 this.textBox.attr("data-people-email", email);
                 this.textBox.focus();
             }
-
-            return;
         };
         return PeoplePicker2010;
     })();
     SPForms.PeoplePicker2010 = PeoplePicker2010;
 })(SPForms || (SPForms = {}));
 //# sourceMappingURL=SPForms_PeoplePicker2010.js.map
+
+///#source 1 1 SPForms_PeoplePicker2013.js
+/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
+/// <reference path="Scripts/typings/jqueryui/jqueryui.d.ts" />
+/// <reference path="Scripts/typings/sharepoint/SharePoint.d.ts" />
+var SPForms;
+(function (SPForms) {
+    var PeoplePicker2013 = (function () {
+        function PeoplePicker2013(divId) {
+            this.divId = divId;
+        }
+        PeoplePicker2013.prototype.initAsync = function () {
+            var _this = this;
+            SP.SOD.loadMultiple(['sp.js', 'sp.runtime.js', 'sp.core.js', 'clienttemplates.js'], function () {
+                // enable people picker
+                var schema = {};
+                schema['PrincipalAccountType'] = 'User,DL,SecGroup,SPGroup';
+                schema['SearchPrincipalSource'] = 15;
+                schema['ResolvePrincipalSource'] = 15;
+                schema['AllowMultipleValues'] = false;
+                schema['MaximumEntitySuggestions'] = 50;
+                schema['Width'] = '280px';
+
+                SPClientPeoplePicker.InitializeStandalonePeoplePicker(_this.divId, null, schema);
+            });
+        };
+
+        PeoplePicker2013.prototype.getSelectedAccountName = function () {
+            var pp = SPClientPeoplePicker.SPClientPeoplePickerDict[this.divId + "_TopSpan"];
+            var accounts = pp.GetAllUserInfo();
+            if (accounts.length == 0)
+                return "";
+            return accounts[0].Key;
+        };
+        return PeoplePicker2013;
+    })();
+    SPForms.PeoplePicker2013 = PeoplePicker2013;
+})(SPForms || (SPForms = {}));
+//# sourceMappingURL=SPForms_PeoplePicker2013.js.map
 
 ///#source 1 1 SPForms_Profile.js
 var SPForms;

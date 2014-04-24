@@ -9,7 +9,7 @@ module SPForms.FormFields {
         internalField: JQuery;
         get_name(): string;
         get_type(): FormFieldType;
-        get_value(): string;
+        get_value(): any;
         set_value(val: string): void;
         get_isrequired(): boolean;
         get_isProfileField(): boolean;
@@ -92,7 +92,7 @@ module SPForms.FormFields {
             return FormField.get_type(this.internalField);
         }
 
-        get_value(): string {
+        get_value(): any {
             return this.internalField.val();
         }
 
@@ -154,7 +154,7 @@ module SPForms.FormFields {
     }
 
     export class RadioFormField extends FormField {
-        get_value(): string {
+        get_value(): any {
             var groupName = this.internalField.attr("name");
             return $("[name=" + groupName + "]:checked").val();
         }
@@ -162,38 +162,56 @@ module SPForms.FormFields {
 
     export class PeopleFormField extends FormField {
 
-        private peoplePicker: PeoplePicker2010;
+        private peoplePicker2010: PeoplePicker2010;
+        private peoplePicker2013: PeoplePicker2013;
+        private peoplePickerMode: string;
 
         constructor(internalField: JQuery) {
             super(internalField);
 
-            var ppMode = internalField.attr("data-form-peoplepicker");
-            if (ppMode === "2010") {
+            this.peoplePickerMode = internalField.attr("data-form-peoplepicker");
+            if (this.peoplePickerMode === "2010") {
 
                 this.internalField.prop("disabled", "disabled");
 
-                this.peoplePicker = new PeoplePicker2010(this.internalField.attr("id"));
+                this.peoplePicker2010 = new PeoplePicker2010(this.internalField.attr("id"));
                 var button = $('<img src="/Scripts/images/addressbook.gif" style="margin-left: 5px; vertical-align: bottom; cursor: pointer;" />');
                 button.click(() => {
-                    this.peoplePicker.openPeoplePicker();
+                    this.peoplePicker2010.openPeoplePicker();
                 });
 
                 this.internalField.after(button);
             }
-            else if (ppMode === "2013") {
+            else if (this.peoplePickerMode === "2013") {
 
+                var origId = this.internalField.attr("id");
+                var divId = origId + "_div";
+
+                this.internalField.hide();
+
+                var div = $('<div id="' + divId + '"></div>');
+                this.internalField.after(div);
+
+                this.peoplePicker2013 = new PeoplePicker2013(divId);
+                this.peoplePicker2013.initAsync();
             }
         }
 
-        get_value(): string {
-            switch (this.internalField.attr("data-form-field-value")) {
-                case "displayname":
-                    return this.internalField.attr("data-people-display");
-                case "email":
-                    return this.internalField.attr("data-people-email");
-                case "accountname":
-                default:
-                    return this.internalField.attr("data-people-account");
+        get_value(): any {
+
+            if (this.peoplePickerMode === "2010") {
+                switch (this.internalField.attr("data-form-peoplepicker-value")) {
+                    case "displayname":
+                        return this.internalField.attr("data-people-display");
+                    case "email":
+                        return this.internalField.attr("data-people-email");
+                    case "accountname":
+                    default:
+                        return this.internalField.attr("data-people-account");
+                }
+            }
+            else if (this.peoplePickerMode === "2013") {
+                return this.peoplePicker2013.getSelectedAccountName();
             }
         }
     }

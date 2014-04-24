@@ -30,6 +30,12 @@ First add the JavaScript file (to your PageLayout, Masterpage or directly within
 
     <script type="text/javascript" src="SPForms.js"></script>
 
+If you want to use the people picker (in SP2013), add the following references to the existing SharePoint js files:
+
+    <script src="/_layouts/15/clientforms.js"></script>
+    <script src="/_layouts/15/clientpeoplepicker.js"></script>
+    <script src="/_layouts/15/autofill.js"></script>
+
 Second, create a form (for example directly within a Content Editor Web Part):
 
 ```HTML
@@ -58,7 +64,7 @@ Now add the data- properties to it to make it a SharePoint list form:
         <input type="radio" name="AcceptLicense" id="radio2" value="No" data-form-field="LicenseAccepted" />
         <label for="radio2">No</label>
         <label for="people1">Manager:</label>
-        <input type="text" id="people1" data-form-peoplepicker="2013" data-form-field="Manager" data-form-field-value="accountname" />
+        <input type="text" id="people1" data-form-peoplepicker="2013" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
         <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed"/>
     </div>
 ```
@@ -101,11 +107,12 @@ Here are the available attributes:
 
         data-form-settings              Valid just once on the main forms div
         data-form-field                 Column name in the SharePoint list 
-        data-form-field-value           Used on the peoplepicker to define what is saved to the SP list (see details below)
         data-form-required              true|false
         data-form-validate              RegEx to validate the value
         data-form-validationmessage     Message to display within the tooltip on validation/required errors
         data-form-peoplepicker          '2010' or '2013' to define an input box as a people picker
+        data-form-peoplepicker-value    Used on the 2010 peoplepicker to define what is saved to the SP list as text (see details below).
+                                        The 2013 picker always saves the selected user in a user field.
         data-form-datepicker            true to define a datepicker
         data-form-profile               A profile property of the current user to pre-populate the field with (see details below)
         data-form-submit                true to make this element the "submit" button
@@ -124,7 +131,7 @@ For the data-form-profile attribute, the following values are allowed:
     Phone
     Title
 
-For data-form-field-value on people picker, the following values are allowed:
+For data-form-peoplepicker-value on the 2010 people picker, the following values are allowed:
 
     displayname
     accountname

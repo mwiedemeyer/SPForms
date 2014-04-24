@@ -46,8 +46,6 @@ module SPForms {
                 this.textBox.attr("data-people-email", email);
                 this.textBox.focus();
             }
-
-            return;
         }
     }
 }

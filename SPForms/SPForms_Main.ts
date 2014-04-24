@@ -31,7 +31,12 @@ module SPForms {
         }
 
         private initialize(): void {
-            this.settings = JSON.parse(this.form.attr("data-form-settings"));
+
+            var settingsAttr = this.form.attr("data-form-settings");
+            if (settingsAttr !== null && settingsAttr !== undefined)
+                this.settings = JSON.parse(settingsAttr);
+            else
+                this.settings = null;
 
             // initialize all form fields
             this.form.find("[data-form-field]").each((i, f) => {
@@ -164,7 +169,7 @@ module SPForms {
             var list = web.get_lists().getByTitle(listName);
 
             // check for max participants before adding the new item
-            if (this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1) {
+            if (this.settings === null || this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1) {
                 this.createListItemInternal(deferred, context, list);
             }
             else {
@@ -193,6 +198,11 @@ module SPForms {
             this.fields.forEach((field) => {
                 var fieldName = field.get_name();
                 var content = field.get_value();
+
+                if (field.get_type() === FormFields.FormFieldType.PeoplePicker) {
+                    var web = context.get_web();
+                    content = web.ensureUser(content);
+                }
 
                 listItem.set_item(fieldName, content);
             });

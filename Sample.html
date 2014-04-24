@@ -1,6 +1,9 @@
 ﻿<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="//code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.SPServices/2014.01/jquery.SPServices.min.js"></script>
+<script src="/_layouts/15/clientforms.js"></script>
+<script src="/_layouts/15/clientpeoplepicker.js"></script>
+<script src="/_layouts/15/autofill.js"></script>
 <script type="text/javascript" src="../Style%20Library/SPForms.js"></script>
 <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.10.4/themes/redmond/jquery-ui.css" />
 
@@ -31,6 +34,6 @@
     <input type="radio" name="AcceptLicense" id="radio2" value="No" data-form-field="LicenseAccepted" />
     <label for="radio2">No</label>
     <label for="people1">Manager:</label>
-    <input type="text" id="people1" data-form-peoplepicker="2013" data-form-field="Manager" data-form-field-value="accountname" />
+    <input type="text" id="people1" data-form-peoplepicker="2013" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
     <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed" />
 </div>
