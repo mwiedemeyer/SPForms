@@ -1,7 +1,7 @@
 SPForms
 =======
 
-A forms solution for SharePoint 2013.
+A forms solution for SharePoint 2013 and 2010.
 It is built in TypeScript (so it compiles to JavaScript). To use it, just download the compiled SPForms.js file.
 
 Why do I need it?
