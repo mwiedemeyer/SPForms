@@ -20,6 +20,11 @@ SPForms depends on the following libraries:
 - [jQueryUI](http://jqueryui.com)
 - [SPServices](http://spservices.codeplex.com)
 
+Just get the required files
+----------------------------
+You only need the [SPForms.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.js) (or [SPForms.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.min.js)).
+
+
 How does it work
 ----------------
 It's super simple: Just create a standard HTML form and apply some attributes.
