@@ -1,8 +1,3 @@
-/// <reference path="SPForms_PeoplePicker2010.ts" />
-/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
-/// <reference path="Scripts/typings/jqueryui/jqueryui.d.ts" />
-/// <reference path="Scripts/typings/sharepoint/SharePoint.d.ts" />
-
 module SPForms.FormFields {
 
     export interface IFormField {
@@ -162,15 +157,15 @@ module SPForms.FormFields {
 
     export class PeopleFormField extends FormField {
 
+        private peoplePickerMode: number;
         private peoplePicker2010: PeoplePicker2010;
-        private peoplePicker2013: PeoplePicker2013;
-        private peoplePickerMode: string;
+        private peoplePicker2013: PeoplePicker2013;        
 
         constructor(internalField: JQuery) {
             super(internalField);
 
-            this.peoplePickerMode = internalField.attr("data-form-peoplepicker");
-            if (this.peoplePickerMode === "2010") {
+            this.peoplePickerMode = Helper.getSPVersion();
+            if (this.peoplePickerMode === 2010) {
 
                 this.internalField.prop("disabled", "disabled");
 
@@ -182,7 +177,7 @@ module SPForms.FormFields {
 
                 this.internalField.after(button);
             }
-            else if (this.peoplePickerMode === "2013") {
+            else if (this.peoplePickerMode === 2013) {
 
                 var origId = this.internalField.attr("id");
                 var divId = origId + "_div";
@@ -199,7 +194,7 @@ module SPForms.FormFields {
 
         get_value(): any {
 
-            if (this.peoplePickerMode === "2010") {
+            if (this.peoplePickerMode === 2010) {
                 switch (this.internalField.attr("data-form-peoplepicker-value")) {
                     case "displayname":
                         return this.internalField.attr("data-people-display");
@@ -210,7 +205,7 @@ module SPForms.FormFields {
                         return this.internalField.attr("data-people-account");
                 }
             }
-            else if (this.peoplePickerMode === "2013") {
+            else if (this.peoplePickerMode === 2013) {
                 return this.peoplePicker2013.getSelectedAccountName();
             }
         }

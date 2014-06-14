@@ -131,7 +131,6 @@ For the data-form-profile attribute, the following values are allowed:
     FirstName
     LastName
     EMail
-    Company
     Department
     Phone
     Title

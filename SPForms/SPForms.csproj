@@ -41,14 +41,33 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-    <None Include="SPForms.js.bundle" />
+    <None Include="SPForms.2010.js.bundle" />
+    <Content Include="SPForms.2010.js">
+      <DependentUpon>SPForms.2010.js.bundle</DependentUpon>
+    </Content>
+    <Content Include="SPForms.2010.min.js">
+      <DependentUpon>SPForms.2010.js</DependentUpon>
+    </Content>
+    <Content Include="SPForms.2013.js">
+      <DependentUpon>SPForms.2013.js.bundle</DependentUpon>
+    </Content>
+    <Content Include="SPForms.2013.min.js">
+      <DependentUpon>SPForms.2013.js</DependentUpon>
+    </Content>
     <Content Include="SPForms.min.js.map">
       <DependentUpon>SPForms.min.js</DependentUpon>
+    </Content>
+    <Content Include="SPForms.2010.min.js.map">
+      <DependentUpon>SPForms.2010.min.js</DependentUpon>
+    </Content>
+    <Content Include="SPForms.2013.js.bundle" />
+    <Content Include="SPForms.2013.min.js.map">
+      <DependentUpon>SPForms.2013.min.js</DependentUpon>
     </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="SPForms.js">
-      <DependentUpon>SPForms.js.bundle</DependentUpon>
+      <DependentUpon>SPForms.2010.js.bundle</DependentUpon>
     </Content>
     <Content Include="SPForms.min.js">
       <DependentUpon>SPForms.js</DependentUpon>
@@ -62,8 +81,10 @@
     <TypeScriptCompile Include="SPForms_Fields.ts" />
     <TypeScriptCompile Include="SPForms_PeoplePicker2010.ts" />
     <TypeScriptCompile Include="SPForms_PeoplePicker2013.ts" />
-    <TypeScriptCompile Include="SPForms_Profile.ts" />
+    <TypeScriptCompile Include="SPForms_Profile2013.ts" />
+    <TypeScriptCompile Include="SPForms_Profile2010.ts" />
     <TypeScriptCompile Include="SPForms_Main.ts" />
+    <TypeScriptCompile Include="SPForms_ProfileBase.ts" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

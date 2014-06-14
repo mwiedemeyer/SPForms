@@ -1,17 +1,11 @@
-﻿/// <reference path="SPForms_Profile.ts" />
-/// <reference path="SPForms_Fields.ts" />
-/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
-/// <reference path="Scripts/typings/jqueryui/jqueryui.d.ts" />
-/// <reference path="Scripts/typings/sharepoint/SharePoint.d.ts" />
+﻿module SPForms {
 
-module SPForms {
-
-    interface IQueryStringParameter {
+    export interface IQueryStringParameter {
         key: string;
         value: string;
     }
 
-    interface IFormSettings {
+    export interface IFormSettings {
         maxParticipants: number;
     }
 
@@ -218,7 +212,7 @@ module SPForms {
         }
     }
 
-    class Helper {
+    export class Helper {
         static getParameters(): IQueryStringParameter[] {
             var par: IQueryStringParameter[] = [];
 
@@ -237,6 +231,13 @@ module SPForms {
             }
 
             return par;
+        }
+
+        static getSPVersion(): number {
+            if (_spPageContextInfo.webUIVersion === 15) {
+                return 2013;
+            }
+            return 2010;
         }
     }
 }

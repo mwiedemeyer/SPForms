@@ -1,7 +1,3 @@
-/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
-/// <reference path="Scripts/typings/jqueryui/jqueryui.d.ts" />
-/// <reference path="Scripts/typings/sharepoint/SharePoint.d.ts" />
-
 module SPForms {
     declare function commonShowModalDialog(a: any, b: any, c: any): void; //internal SharePoint function
 

@@ -1,8 +1,4 @@
-﻿/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
-/// <reference path="Scripts/typings/jqueryui/jqueryui.d.ts" />
-/// <reference path="Scripts/typings/sharepoint/SharePoint.d.ts" />
-
-module SPForms {
+﻿module SPForms {
 
     export class PeoplePicker2013 {
 
