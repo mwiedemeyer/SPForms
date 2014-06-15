@@ -18,11 +18,13 @@ SPForms depends on the following libraries:
 
 - [jQuery](http://jquery.com)
 - [jQueryUI](http://jqueryui.com)
-- [SPServices](http://spservices.codeplex.com)
+- [SPServices](http://spservices.codeplex.com) => Only required on SharePoint 2010
 
 Just get the required files
 ----------------------------
-You only need the [SPForms.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.js) (or [SPForms.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.min.js)).
+For SharePoint 2010:
+- [SPForms.2010.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2010.js) (or [SPForms.2010.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2010.min.js))
+- [SPForms.2013.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2013.js) (or [SPForms.2013.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2013.min.js))
 
 
 How does it work
@@ -33,7 +35,7 @@ You can use whatever you want: HTML5 stuff, JavaScript frameworks, JavaScript li
 Ok, here is an example of a basic form to write to a SharePoint list:
 First add the JavaScript file (to your PageLayout, Masterpage or directly within a Content Editor Web Part):
 
-    <script type="text/javascript" src="SPForms.js"></script>
+    <script type="text/javascript" src="SPForms.2013.js"></script>
 
 If you want to use the people picker (in SP2013), add the following references to the existing SharePoint js files:
 
@@ -46,13 +48,17 @@ Second, create a form (for example directly within a Content Editor Web Part):
 ```HTML
     <div>
         <input type="text" name="Name" />
+        <br />
         <input type="text" name="EMail" />
+        <br />
         <input type="radio" name="AcceptLicense" id="radio1" value="Yes" />
         <label for="radio1">Yes</label>
         <input type="radio" name="AcceptLicense" id="radio2" value="No" />
         <label for="radio2">No</label>
+        <br />
         <label for="people1">Manager:</label>
         <input type="text" id="people1" />
+        <br />
         <input type="button" value="Save" />
     </div>
 ```
@@ -63,13 +69,17 @@ Now add the data- properties to it to make it a SharePoint list form:
 ```HTML
     <div id="myspform" data-form-settings='{"maxParticipants": 5}'>
         <input id="name" type="text" name="Name" data-form-field="Title" data-form-required="true" data-form-validationmessage="This is a required field" data-form-profile="DisplayName" />
+        <br />
         <input id="email" type="text" name="EMail" data-form-field="EMail" data-form-required="true" data-form-validate="\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*" data-form-validationmessage="Not a valid email address" data-form-profile="EMail" />
+        <br />
         <input type="radio" name="AcceptLicense" id="radio1" value="Yes" data-form-field="LicenseAccepted" />
         <label for="radio1">Yes</label>
         <input type="radio" name="AcceptLicense" id="radio2" value="No" data-form-field="LicenseAccepted" />
         <label for="radio2">No</label>
+        <br />
         <label for="people1">Manager:</label>
-        <input type="text" id="people1" data-form-peoplepicker="2013" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
+        <input type="text" id="people1" data-form-peoplepicker="true" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
+        <br />
         <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed"/>
     </div>
 ```
@@ -115,7 +125,7 @@ Here are the available attributes:
         data-form-required              true|false
         data-form-validate              RegEx to validate the value
         data-form-validationmessage     Message to display within the tooltip on validation/required errors
-        data-form-peoplepicker          '2010' or '2013' to define an input box as a people picker
+        data-form-peoplepicker          true to define an input box as a people picker
         data-form-peoplepicker-value    Used on the 2010 peoplepicker to define what is saved to the SP list as text (see details below).
                                         The 2013 picker always saves the selected user in a user field.
         data-form-datepicker            true to define a datepicker

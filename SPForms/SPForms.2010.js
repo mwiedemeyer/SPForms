@@ -571,8 +571,6 @@ var SPForms;
                                 userData.title = $(this).find("Value").text();
                             if ($(this).find("Name").text() === "WorkEmail")
                                 userData.email = $(this).find("Value").text();
-                            if ($(this).find("Name").text() === "otg-Company")
-                                userData.company = $(this).find("Value").text();
                         });
 
                         deferred.resolve(userData);

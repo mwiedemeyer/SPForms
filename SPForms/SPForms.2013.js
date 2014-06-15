@@ -537,35 +537,34 @@ var SPForms;
 
                 var userData = {};
 
-                var params = {
-                    operation: 'GetUserProfileByName',
-                    async: true,
-                    completefunc: function (xData, Status) {
-                        $(xData.responseXML).SPFilterNode("PropertyData").each(function () {
-                            if ($(this).find("Name").text() === "PreferredName")
-                                userData.displayName = $(this).find("Value").text();
-                            if ($(this).find("Name").text() === "FirstName")
-                                userData.firstName = $(this).find("Value").text();
-                            if ($(this).find("Name").text() === "LastName")
-                                userData.lastName = $(this).find("Value").text();
-                            if ($(this).find("Name").text() === "WorkPhone")
-                                userData.phone = $(this).find("Value").text();
-                            if ($(this).find("Name").text() === "Department")
-                                userData.department = $(this).find("Value").text();
-                            if ($(this).find("Name").text() === "Title")
-                                userData.title = $(this).find("Value").text();
-                            if ($(this).find("Name").text() === "WorkEmail")
-                                userData.email = $(this).find("Value").text();
+                SP.SOD.loadMultiple(['sp.js', 'userprofile'], function () {
+                    var context = SP.ClientContext.get_current();
+                    var peopleManager = new SP.UserProfiles.PeopleManager(context);
+
+                    var currentUser = context.get_web().get_currentUser();
+                    context.load(currentUser);
+                    context.executeQueryAsync(function () {
+                        var targetUser = currentUser.get_loginName();
+                        var profilePropertyNames = ["PreferredName", "FirstName", "LastName", "WorkPhone", "Department", "Title", "WorkEmail"];
+                        var userProfilePropertiesForUser = new SP.UserProfiles.UserProfilePropertiesForUser(context, targetUser, profilePropertyNames);
+
+                        var properties = peopleManager.getUserProfilePropertiesFor(userProfilePropertiesForUser);
+                        context.load(userProfilePropertiesForUser);
+                        context.executeQueryAsync(function (sender, args) {
+                            userData.displayName = properties[0];
+                            userData.firstName = properties[1];
+                            userData.lastName = properties[2];
+                            userData.phone = properties[3];
+                            userData.department = properties[4];
+                            userData.title = properties[5];
+                            userData.email = properties[6];
+
+                            deferred.resolve(userData);
+                        }, function (sender, args) {
                         });
-
-                        deferred.resolve(userData);
-                    },
-                    accountName: $().SPServices.SPGetCurrentUser({
-                        fieldName: "Name"
-                    })
-                };
-
-                $().SPServices(params);
+                    }, function () {
+                    });
+                });
 
                 return deferred.promise();
             };

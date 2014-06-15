@@ -1,9 +1,14 @@
 ﻿<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="//code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script>
+<!-- Only required for SharePoint 2010: -->
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.SPServices/2014.01/jquery.SPServices.min.js"></script>
+<!-- END: Only required for SharePoint 2010 -->
+
+<!-- Only required for SharePoint 2013 PeoplePicker: -->
 <script src="/_layouts/15/clientforms.js"></script>
 <script src="/_layouts/15/clientpeoplepicker.js"></script>
 <script src="/_layouts/15/autofill.js"></script>
+<!-- END: Only required for SharePoint 2013 PeoplePicker -->
 <script type="text/javascript" src="../Style%20Library/SPForms.2013.js"></script>
 <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.10.4/themes/redmond/jquery-ui.css" />
 
@@ -28,12 +33,16 @@
 
 <div id="myspform" data-form-settings='{"maxParticipants": 5}'>
     <input id="name" type="text" name="Name" data-form-field="Title" data-form-required="true" data-form-validationmessage="This is a required field" data-form-profile="DisplayName" />
+    <br />
     <input id="email" type="text" name="EMail" data-form-field="EMail" data-form-required="true" data-form-validate="\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*" data-form-validationmessage="Not a valid email address" data-form-profile="EMail" />
+    <br />
     <input type="radio" name="AcceptLicense" id="radio1" value="Yes" data-form-field="LicenseAccepted" />
     <label for="radio1">Yes</label>
     <input type="radio" name="AcceptLicense" id="radio2" value="No" data-form-field="LicenseAccepted" />
     <label for="radio2">No</label>
+    <br />
     <label for="people1">Manager:</label>
     <input type="text" id="people1" data-form-peoplepicker="true" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
+    <br />
     <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed" />
 </div>
