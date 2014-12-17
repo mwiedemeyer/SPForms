@@ -29,7 +29,7 @@
         public reloadFields(): void {
             this.fields = [];
             this.form.find("[data-form-field]").each((i, f) => {
-                var field = FormFields.FormField.getFormFieldByType($(f));
+                var field = FormFields.FormField.getFormField($(f));
                 this.fields.push(field);
             });
 

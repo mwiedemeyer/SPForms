@@ -37,7 +37,7 @@ module SPForms.FormFields {
 
         //#region static methods to get field by type
 
-        public static getFormFieldByType(internalField: JQuery): FormField {
+        public static getFormField(internalField: JQuery): FormField {
             switch (FormField.getFormFieldType(internalField)) {
                 case FormFieldType.Radio:
                     return new RadioFormField(internalField);

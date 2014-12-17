@@ -17,7 +17,7 @@ var SPForms;
             var _this = this;
             this.fields = [];
             this.form.find("[data-form-field]").each(function (i, f) {
-                var field = SPForms.FormFields.FormField.getFormFieldByType($(f));
+                var field = SPForms.FormFields.FormField.getFormField($(f));
                 _this.fields.push(field);
             });
             this.populateFieldsFromQueryString();
@@ -270,7 +270,7 @@ var SPForms;
                 }
             }
             //#region static methods to get field by type
-            FormField.getFormFieldByType = function (internalField) {
+            FormField.getFormField = function (internalField) {
                 switch (FormField.getFormFieldType(internalField)) {
                     case 1 /* Radio */:
                         return new RadioFormField(internalField);
