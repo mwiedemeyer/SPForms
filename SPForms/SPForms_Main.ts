@@ -24,23 +24,28 @@
             this.form = $("#" + formId);
         }
 
-        private initialize(): void {
+        // Reload all fields
+        // You should call this method if you changed data - form attributes on HTML elements
+        public reloadFields(): void {
+            this.fields = [];
+            this.form.find("[data-form-field]").each((i, f) => {
+                var field = FormFields.FormField.getFormFieldByType($(f));
+                this.fields.push(field);
+            });
 
+            this.populateFieldsFromQueryString();
+            this.loadProfileData();
+        }
+
+        private initialize(): void {
             var settingsAttr = this.form.attr("data-form-settings");
             if (settingsAttr !== null && settingsAttr !== undefined)
                 this.settings = JSON.parse(settingsAttr);
             else
                 this.settings = null;
 
-            // initialize all form fields
-            this.form.find("[data-form-field]").each((i, f) => {
-                var field = FormFields.FormField.getFormFieldByType($(f));
-                this.fields.push(field);
-            });
-
+            this.reloadFields();
             this.wireUpEvents();
-            this.populateFieldsFromQueryString();
-            this.loadProfileData();
         }
 
         // Attach events to controls
@@ -194,8 +199,13 @@
                 var content = field.get_value();
 
                 if (field.get_type() === FormFields.FormFieldType.PeoplePicker) {
-                    var web = context.get_web();
-                    content = web.ensureUser(content);
+                    if (content !== null && content !== "") {
+                        var web = context.get_web();
+                        content = web.ensureUser(content);
+                    }
+                    else {
+                        content = null;
+                    }
                 }
 
                 listItem.set_item(fieldName, content);

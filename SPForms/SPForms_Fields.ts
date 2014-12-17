@@ -37,8 +37,8 @@ module SPForms.FormFields {
 
         //#region static methods to get field by type
 
-        static getFormFieldByType(internalField: JQuery): FormField {
-            switch (FormField.get_type(internalField)) {
+        public static getFormFieldByType(internalField: JQuery): FormField {
+            switch (FormField.getFormFieldType(internalField)) {
                 case FormFieldType.Radio:
                     return new RadioFormField(internalField);
                 case FormFieldType.PeoplePicker:
@@ -51,7 +51,7 @@ module SPForms.FormFields {
             }
         }
 
-        static get_type(internalField: JQuery): FormFieldType {
+        public static getFormFieldType(internalField: JQuery): FormFieldType {
             var type = internalField.attr("type");
             switch (type) {
                 case "radio":
@@ -84,7 +84,7 @@ module SPForms.FormFields {
         }
 
         get_type(): FormFieldType {
-            return FormField.get_type(this.internalField);
+            return FormField.getFormFieldType(this.internalField);
         }
 
         get_value(): any {
@@ -96,6 +96,8 @@ module SPForms.FormFields {
         }
 
         get_isrequired(): boolean {
+            if (!this.internalField.is(":visible"))
+                return false;
             return (this.internalField.attr("data-form-required") !== undefined);
         }
 
@@ -119,10 +121,11 @@ module SPForms.FormFields {
 
         validate(): boolean {
             if (this.get_isrequired() && this.get_value().length === 0) {
+                var validationMessage = this.internalField.attr("data-form-validationmessage") || "Required";
                 this.internalField.addClass("form-invalid");
                 this.internalField.tooltip({
                     items: "[id=" + this.internalField.attr('ID') + "]",
-                    content: this.internalField.attr("data-form-validationmessage"),
+                    content: validationMessage,
                     disabled: false
                 });
 

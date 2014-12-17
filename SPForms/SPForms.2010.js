@@ -1,4 +1,4 @@
-﻿///#source 1 1 C:\Data\Dev\GitHub\SPForms\SPForms\SPForms_Main.js
+﻿///#source 1 1 /SPForms_Main.js
 var SPForms;
 (function (SPForms) {
     var FormManager = (function () {
@@ -11,26 +11,27 @@ var SPForms;
             f.initialize();
             return f;
         };
-
-        FormManager.prototype.initialize = function () {
+        // Reload all fields
+        // You should call this method if you changed data - form attributes on HTML elements
+        FormManager.prototype.reloadFields = function () {
             var _this = this;
+            this.fields = [];
+            this.form.find("[data-form-field]").each(function (i, f) {
+                var field = SPForms.FormFields.FormField.getFormFieldByType($(f));
+                _this.fields.push(field);
+            });
+            this.populateFieldsFromQueryString();
+            this.loadProfileData();
+        };
+        FormManager.prototype.initialize = function () {
             var settingsAttr = this.form.attr("data-form-settings");
             if (settingsAttr !== null && settingsAttr !== undefined)
                 this.settings = JSON.parse(settingsAttr);
             else
                 this.settings = null;
-
-            // initialize all form fields
-            this.form.find("[data-form-field]").each(function (i, f) {
-                var field = SPForms.FormFields.FormField.getFormFieldByType($(f));
-                _this.fields.push(field);
-            });
-
+            this.reloadFields();
             this.wireUpEvents();
-            this.populateFieldsFromQueryString();
-            this.loadProfileData();
         };
-
         // Attach events to controls
         FormManager.prototype.wireUpEvents = function () {
             var _this = this;
@@ -38,16 +39,13 @@ var SPForms;
             this.form.find("[data-form-submit]").click(function (el) {
                 var button = $(el.target);
                 var listName = button.attr("data-form-submit-list");
-
                 // remove 'invalid' css from all elements and remove tooltips
                 $("[data-form-field]").removeClass("form-invalid");
                 $("[data-form-field]").tooltip(); //init if not yet initalized
                 $("[data-form-field]").tooltip("option", "disabled", true);
-
                 if (!_this.validateControls()) {
                     return;
                 }
-
                 _this.createListItem(listName).done(function () {
                     var onSuccessFunction = button.attr("data-form-submit-onsuccess");
                     if (onSuccessFunction !== undefined) {
@@ -61,13 +59,11 @@ var SPForms;
                 });
             });
         };
-
         // Set field values if defined in QueryString
         FormManager.prototype.populateFieldsFromQueryString = function () {
             var par = Helper.getParameters();
             if (par === null)
                 return;
-
             // check if parameter begins with "form-" and set the fields value
             par.forEach(function (p) {
                 if (p.key.indexOf("form-") > -1) {
@@ -77,7 +73,6 @@ var SPForms;
                 }
             });
         };
-
         // load profile data if at least one field requires profile information
         FormManager.prototype.loadProfileData = function () {
             var _this = this;
@@ -87,10 +82,8 @@ var SPForms;
                     isAtLeastOneProfileFieldDefined = true;
                 }
             });
-
             if (!isAtLeastOneProfileFieldDefined)
                 return;
-
             SPForms.Profile.ProfileManager.getProfileAsync().done(function (data) {
                 _this.fields.forEach(function (field) {
                     var profileProperty = field.get_profileProperty();
@@ -126,66 +119,59 @@ var SPForms;
                 });
             });
         };
-
         // Validate all field controls
         FormManager.prototype.validateControls = function () {
             var isValid = true;
-
             this.fields.forEach(function (f) {
                 if (!f.validate()) {
                     isValid = false;
                     return;
                 }
             });
-
             return isValid;
         };
-
         // Create SharePoint list item from fields
         FormManager.prototype.createListItem = function (listName) {
             var _this = this;
             var deferred = $.Deferred();
-
             var context = new SP.ClientContext();
             var web = context.get_web();
             var list = web.get_lists().getByTitle(listName);
-
             // check for max participants before adding the new item
             if (this.settings === null || this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1) {
                 this.createListItemInternal(deferred, context, list);
-            } else {
+            }
+            else {
                 context.load(list, 'ItemCount');
                 context.executeQueryAsync(function () {
                     if (list.get_itemCount() >= _this.settings.maxParticipants) {
                         deferred.reject("Error: MaxParticipants");
                         return;
                     }
-
                     _this.createListItemInternal(deferred, context, list);
                 }, function (sender, args) {
                     deferred.reject(args.get_message());
                 });
             }
-
             return deferred.promise();
         };
-
         FormManager.prototype.createListItemInternal = function (deferred, context, list) {
             var lc = new SP.ListItemCreationInformation();
             var listItem = list.addItem(lc);
-
             this.fields.forEach(function (field) {
                 var fieldName = field.get_name();
                 var content = field.get_value();
-
                 if (field.get_type() === 3 /* PeoplePicker */) {
-                    var web = context.get_web();
-                    content = web.ensureUser(content);
+                    if (content !== null && content !== "") {
+                        var web = context.get_web();
+                        content = web.ensureUser(content);
+                    }
+                    else {
+                        content = null;
+                    }
                 }
-
                 listItem.set_item(fieldName, content);
             });
-
             listItem.update();
             context.executeQueryAsync(function () {
                 deferred.resolve();
@@ -196,17 +182,14 @@ var SPForms;
         return FormManager;
     })();
     SPForms.FormManager = FormManager;
-
     var Helper = (function () {
         function Helper() {
         }
         Helper.getParameters = function () {
             var par = [];
-
             var query = window.location.search.substring(1);
             if (query === "")
                 return null;
-
             var vars = query.split("&");
             for (var i = 0; i < vars.length; i++) {
                 var pair = vars[i].split("=");
@@ -216,10 +199,8 @@ var SPForms;
                 };
                 par.push(p);
             }
-
             return par;
         };
-
         Helper.getSPVersion = function () {
             if (_spPageContextInfo.webUIVersion === 15) {
                 return 2013;
@@ -230,14 +211,12 @@ var SPForms;
     })();
     SPForms.Helper = Helper;
 })(SPForms || (SPForms = {}));
-
 //#region forEach implementation for older browser (<IE9)
 if (!Array.prototype.forEach) {
     Array.prototype.forEach = function (f) {
         var len = this.length;
         if (typeof f != "function")
             throw new TypeError();
-
         var thisp = arguments[1];
         for (var i = 0; i < len; i++) {
             if (i in this)
@@ -245,10 +224,8 @@ if (!Array.prototype.forEach) {
         }
     };
 }
-//#endregion
 //# sourceMappingURL=SPForms_Main.js.map
-
-///#source 1 1 C:\Data\Dev\GitHub\SPForms\SPForms\SPForms_Fields.js
+///#source 1 1 /SPForms_Fields.js
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -257,6 +234,7 @@ var __extends = this.__extends || function (d, b) {
 };
 var SPForms;
 (function (SPForms) {
+    var FormFields;
     (function (FormFields) {
         (function (FormFieldType) {
             FormFieldType[FormFieldType["Text"] = 0] = "Text";
@@ -265,7 +243,6 @@ var SPForms;
             FormFieldType[FormFieldType["PeoplePicker"] = 3] = "PeoplePicker";
         })(FormFields.FormFieldType || (FormFields.FormFieldType = {}));
         var FormFieldType = FormFields.FormFieldType;
-
         (function (ProfileProperty) {
             ProfileProperty[ProfileProperty["Unknown"] = 0] = "Unknown";
             ProfileProperty[ProfileProperty["DisplayName"] = 1] = "DisplayName";
@@ -278,7 +255,6 @@ var SPForms;
             ProfileProperty[ProfileProperty["Title"] = 8] = "Title";
         })(FormFields.ProfileProperty || (FormFields.ProfileProperty = {}));
         var ProfileProperty = FormFields.ProfileProperty;
-
         var FormField = (function () {
             //#endregion
             function FormField(internalField) {
@@ -291,7 +267,7 @@ var SPForms;
             }
             //#region static methods to get field by type
             FormField.getFormFieldByType = function (internalField) {
-                switch (FormField.get_type(internalField)) {
+                switch (FormField.getFormFieldType(internalField)) {
                     case 1 /* Radio */:
                         return new RadioFormField(internalField);
                     case 3 /* PeoplePicker */:
@@ -303,8 +279,7 @@ var SPForms;
                         return new FormField(internalField);
                 }
             };
-
-            FormField.get_type = function (internalField) {
+            FormField.getFormFieldType = function (internalField) {
                 var type = internalField.attr("type");
                 switch (type) {
                     case "radio":
@@ -318,57 +293,50 @@ var SPForms;
                         return 0 /* Text */;
                 }
             };
-
             //#region Properties
             FormField.prototype.get_name = function () {
                 return this.internalField.attr("data-form-field");
             };
-
             FormField.prototype.get_type = function () {
-                return FormField.get_type(this.internalField);
+                return FormField.getFormFieldType(this.internalField);
             };
-
             FormField.prototype.get_value = function () {
                 return this.internalField.val();
             };
-
             FormField.prototype.set_value = function (val) {
                 this.internalField.val(val);
             };
-
             FormField.prototype.get_isrequired = function () {
+                if (!this.internalField.is(":visible"))
+                    return false;
                 return (this.internalField.attr("data-form-required") !== undefined);
             };
-
             FormField.prototype.get_validatorExpression = function () {
                 return this.internalField.attr("data-form-validate");
             };
-
             FormField.prototype.get_isProfileField = function () {
                 return (this.internalField.attr("data-form-profile") !== undefined);
             };
-
             FormField.prototype.get_profileProperty = function () {
-                try  {
+                try {
                     return ProfileProperty[this.internalField.attr("data-form-profile")];
-                } catch (e) {
+                }
+                catch (e) {
                     return 0 /* Unknown */;
                 }
             };
-
             //#endregion
             FormField.prototype.validate = function () {
                 if (this.get_isrequired() && this.get_value().length === 0) {
+                    var validationMessage = this.internalField.attr("data-form-validationmessage") || "Required";
                     this.internalField.addClass("form-invalid");
                     this.internalField.tooltip({
                         items: "[id=" + this.internalField.attr('ID') + "]",
-                        content: this.internalField.attr("data-form-validationmessage"),
+                        content: validationMessage,
                         disabled: false
                     });
-
                     return false;
                 }
-
                 var validatorExp = this.get_validatorExpression();
                 if (validatorExp !== undefined) {
                     var regex = new RegExp(validatorExp);
@@ -379,17 +347,14 @@ var SPForms;
                             content: this.internalField.attr("data-form-validationmessage"),
                             disabled: false
                         });
-
                         return false;
                     }
                 }
-
                 return true;
             };
             return FormField;
         })();
         FormFields.FormField = FormField;
-
         var RadioFormField = (function (_super) {
             __extends(RadioFormField, _super);
             function RadioFormField() {
@@ -402,33 +367,27 @@ var SPForms;
             return RadioFormField;
         })(FormField);
         FormFields.RadioFormField = RadioFormField;
-
         var PeopleFormField = (function (_super) {
             __extends(PeopleFormField, _super);
             function PeopleFormField(internalField) {
                 var _this = this;
                 _super.call(this, internalField);
-
                 this.peoplePickerMode = SPForms.Helper.getSPVersion();
                 if (this.peoplePickerMode === 2010) {
                     this.internalField.prop("disabled", "disabled");
-
                     this.peoplePicker2010 = new SPForms.PeoplePicker2010(this.internalField.attr("id"));
                     var button = $('<img src="/Scripts/images/addressbook.gif" style="margin-left: 5px; vertical-align: bottom; cursor: pointer;" />');
                     button.click(function () {
                         _this.peoplePicker2010.openPeoplePicker();
                     });
-
                     this.internalField.after(button);
-                } else if (this.peoplePickerMode === 2013) {
+                }
+                else if (this.peoplePickerMode === 2013) {
                     var origId = this.internalField.attr("id");
                     var divId = origId + "_div";
-
                     this.internalField.hide();
-
                     var div = $('<div id="' + divId + '"></div>');
                     this.internalField.after(div);
-
                     this.peoplePicker2013 = new SPForms.PeoplePicker2013(divId);
                     this.peoplePicker2013.initAsync();
                 }
@@ -444,30 +403,27 @@ var SPForms;
                         default:
                             return this.internalField.attr("data-people-account");
                     }
-                } else if (this.peoplePickerMode === 2013) {
+                }
+                else if (this.peoplePickerMode === 2013) {
                     return this.peoplePicker2013.getSelectedAccountName();
                 }
             };
             return PeopleFormField;
         })(FormField);
         FormFields.PeopleFormField = PeopleFormField;
-
         var DatePickerField = (function (_super) {
             __extends(DatePickerField, _super);
             function DatePickerField(internalField) {
                 _super.call(this, internalField);
-
                 this.internalField.datepicker();
             }
             return DatePickerField;
         })(FormField);
         FormFields.DatePickerField = DatePickerField;
-    })(SPForms.FormFields || (SPForms.FormFields = {}));
-    var FormFields = SPForms.FormFields;
+    })(FormFields = SPForms.FormFields || (SPForms.FormFields = {}));
 })(SPForms || (SPForms = {}));
 //# sourceMappingURL=SPForms_Fields.js.map
-
-///#source 1 1 C:\Data\Dev\GitHub\SPForms\SPForms\SPForms_PeoplePicker2010.js
+///#source 1 1 /SPForms_PeoplePicker2010.js
 var SPForms;
 (function (SPForms) {
     var PeoplePicker2010 = (function () {
@@ -485,12 +441,10 @@ var SPForms;
             dialogURL += '&DialogImage=/_layouts/images/ppeople.gif';
             dialogURL += '&PickerDialogType=Microsoft.SharePoint.WebControls.PeoplePickerDialog, Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c';
             dialogURL += '&DefaultSearch=';
-
             commonShowModalDialog(dialogURL, dialogOptions, function (sr) {
                 _this.peoplePickerCallback(sr);
             });
         };
-
         PeoplePicker2010.prototype.peoplePickerCallback = function (searchResult) {
             var xmlDoc = $.parseXML(searchResult);
             var $xml = $(xmlDoc);
@@ -498,7 +452,6 @@ var SPForms;
             var display = $xml.find('Entity').attr('DisplayText');
             var extraData = $xml.find('Entity ExtraData ArrayOfDictionaryEntry');
             var email = extraData.find('Key:contains("Email")').next().text();
-
             if (this.textBox.val() != null) {
                 // multi select
                 //if (this.textBox.val() != '') {
@@ -517,10 +470,10 @@ var SPForms;
     SPForms.PeoplePicker2010 = PeoplePicker2010;
 })(SPForms || (SPForms = {}));
 //# sourceMappingURL=SPForms_PeoplePicker2010.js.map
-
-///#source 1 1 C:\Data\Dev\GitHub\SPForms\SPForms\SPForms_ProfileBase.js
+///#source 1 1 /SPForms_ProfileBase.js
 var SPForms;
 (function (SPForms) {
+    var Profile;
     (function (Profile) {
         var ProfileManager = (function () {
             function ProfileManager() {
@@ -528,30 +481,28 @@ var SPForms;
             ProfileManager.getProfileAsync = function () {
                 if (SPForms.Helper.getSPVersion() === 2013) {
                     return Profile.ProfileManager2013.getProfileAsync();
-                } else {
+                }
+                else {
                     return Profile.ProfileManager2010.getProfileAsync();
                 }
             };
             return ProfileManager;
         })();
         Profile.ProfileManager = ProfileManager;
-    })(SPForms.Profile || (SPForms.Profile = {}));
-    var Profile = SPForms.Profile;
+    })(Profile = SPForms.Profile || (SPForms.Profile = {}));
 })(SPForms || (SPForms = {}));
 //# sourceMappingURL=SPForms_ProfileBase.js.map
-
-///#source 1 1 C:\Data\Dev\GitHub\SPForms\SPForms\SPForms_Profile2010.js
+///#source 1 1 /SPForms_Profile2010.js
 var SPForms;
 (function (SPForms) {
+    var Profile;
     (function (Profile) {
         var ProfileManager2010 = (function () {
             function ProfileManager2010() {
             }
             ProfileManager2010.getProfileAsync = function () {
                 var deferred = $.Deferred();
-
                 var userData = {};
-
                 var params = {
                     operation: 'GetUserProfileByName',
                     async: true,
@@ -572,23 +523,18 @@ var SPForms;
                             if ($(this).find("Name").text() === "WorkEmail")
                                 userData.email = $(this).find("Value").text();
                         });
-
                         deferred.resolve(userData);
                     },
                     accountName: $().SPServices.SPGetCurrentUser({
                         fieldName: "Name"
                     })
                 };
-
                 $().SPServices(params);
-
                 return deferred.promise();
             };
             return ProfileManager2010;
         })();
         Profile.ProfileManager2010 = ProfileManager2010;
-    })(SPForms.Profile || (SPForms.Profile = {}));
-    var Profile = SPForms.Profile;
+    })(Profile = SPForms.Profile || (SPForms.Profile = {}));
 })(SPForms || (SPForms = {}));
 //# sourceMappingURL=SPForms_Profile2010.js.map
-
