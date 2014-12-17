@@ -80,7 +80,7 @@ Now add the data- properties to it to make it a SharePoint list form:
         <label for="people1">Manager:</label>
         <input type="text" id="people1" data-form-peoplepicker="true" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
         <br />
-        <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed"/>
+        <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed" data-form-submit-onvalidationerror="onValidationError"/>
     </div>
 ```
 
@@ -97,6 +97,9 @@ Now to the magic stuff, just add some JavaScript:
         }
         function onSubmitFailed(message) {
             alert("Error: " + message);
+        }
+        function onValidationError() {
+            alert("Please check required fields");
         }
     </script>
 
@@ -120,20 +123,21 @@ Available attributes
 --------------------
 Here are the available attributes:
 
-        data-form-settings              Valid just once on the main forms div
-        data-form-field                 Column name in the SharePoint list 
-        data-form-required              true|false
-        data-form-validate              RegEx to validate the value
-        data-form-validationmessage     Message to display within the tooltip on validation/required errors
-        data-form-peoplepicker          true to define an input box as a people picker
-        data-form-peoplepicker-value    Used on the 2010 peoplepicker to define what is saved to the SP list as text (see details below).
-                                        The 2013 picker always saves the selected user in a user field.
-        data-form-datepicker            true to define a datepicker
-        data-form-profile               A profile property of the current user to pre-populate the field with (see details below)
-        data-form-submit                true to make this element the "submit" button
-        data-form-submit-list           Title of the SP List to write to
-        data-form-submit-onsuccess      Javascript function to execute after successful submit
-        data-form-submit-onfailed       Javascript function to execute after failure
+        data-form-settings                      Valid just once on the main forms div
+        data-form-field                         Column name in the SharePoint list 
+        data-form-required                      true|false
+        data-form-validate                      RegEx to validate the value
+        data-form-validationmessage             Message to display within the tooltip on validation/required errors
+        data-form-peoplepicker                  true to define an input box as a people picker
+        data-form-peoplepicker-value            Used on the 2010 peoplepicker to define what is saved to the SP list as text (see details below).
+                                                The 2013 picker always saves the selected user in a user field.
+        data-form-datepicker                    true to define a datepicker
+        data-form-profile                       A profile property of the current user to pre-populate the field with (see details below)
+        data-form-submit                        true to make this element the "submit" button
+        data-form-submit-list                   Title of the SP List to write to
+        data-form-submit-onsuccess              Javascript function to execute after successful submit
+        data-form-submit-onfailed               Javascript function to execute after failure
+        data-form-submit-onvalidationerror      Javascript function to execute if any field is invalid
 
 For the data-form-profile attribute, the following values are allowed:
 

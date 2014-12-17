@@ -61,6 +61,10 @@
                 $("[data-form-field]").tooltip("option", "disabled", true);
 
                 if (!this.validateControls()) {
+                    var onValidationErrorFunction = button.attr("data-form-submit-onvalidationerror");
+                    if (onValidationErrorFunction !== undefined) {
+                        window[onValidationErrorFunction]();
+                    }
                     return;
                 }
 

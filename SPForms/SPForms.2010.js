@@ -44,6 +44,10 @@ var SPForms;
                 $("[data-form-field]").tooltip(); //init if not yet initalized
                 $("[data-form-field]").tooltip("option", "disabled", true);
                 if (!_this.validateControls()) {
+                    var onValidationErrorFunction = button.attr("data-form-submit-onvalidationerror");
+                    if (onValidationErrorFunction !== undefined) {
+                        window[onValidationErrorFunction]();
+                    }
                     return;
                 }
                 _this.createListItem(listName).done(function () {

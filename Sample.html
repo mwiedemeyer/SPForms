@@ -25,6 +25,9 @@
     function onSubmitFailed(message) {
         alert("Error: " + message);
     }
+    function onValidationError() {
+        alert("Please check required fields");
+    }
 
     $(document).ready(function () {
         SPForms.FormManager.init("myspform");
@@ -44,5 +47,5 @@
     <label for="people1">Manager:</label>
     <input type="text" id="people1" data-form-peoplepicker="true" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
     <br />
-    <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed" />
+    <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed" data-form-submit-onvalidationerror="onValidationError" />
 </div>
