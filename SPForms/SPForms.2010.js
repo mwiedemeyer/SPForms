@@ -245,6 +245,7 @@ var SPForms;
             FormFieldType[FormFieldType["Radio"] = 1] = "Radio";
             FormFieldType[FormFieldType["DatePicker"] = 2] = "DatePicker";
             FormFieldType[FormFieldType["PeoplePicker"] = 3] = "PeoplePicker";
+            FormFieldType[FormFieldType["DropDown"] = 4] = "DropDown";
         })(FormFields.FormFieldType || (FormFields.FormFieldType = {}));
         var FormFieldType = FormFields.FormFieldType;
         (function (ProfileProperty) {
@@ -278,12 +279,17 @@ var SPForms;
                         return new PeopleFormField(internalField);
                     case 2 /* DatePicker */:
                         return new DatePickerField(internalField);
+                    case 4 /* DropDown */:
+                        return new DropDownField(internalField);
                     case 0 /* Text */:
                     default:
                         return new FormField(internalField);
                 }
             };
             FormField.getFormFieldType = function (internalField) {
+                if (internalField.get()[0].tagName.toLowerCase() === "select") {
+                    return 4 /* DropDown */;
+                }
                 var type = internalField.attr("type");
                 switch (type) {
                     case "radio":
@@ -424,6 +430,113 @@ var SPForms;
             return DatePickerField;
         })(FormField);
         FormFields.DatePickerField = DatePickerField;
+        var DropDownField = (function (_super) {
+            __extends(DropDownField, _super);
+            function DropDownField(internalField) {
+                _super.call(this, internalField);
+                this._valuesToElementItems = [];
+                this._list = internalField.attr("data-form-select-list");
+                this._valueColumn = internalField.attr("data-form-select-valueColumn");
+                this._isLookup = (this._list !== undefined && this._list !== null && this._list !== "");
+                if (this._isLookup) {
+                    this._initialOptionElements = $("option", internalField).detach();
+                    this.parseValuesToElements(internalField.attr("data-form-select-setValuesToElements"));
+                    this.setupDependencies();
+                    this.loadList();
+                    this.wireupEvents();
+                }
+            }
+            DropDownField.prototype.loadList = function () {
+                var _this = this;
+                var deferred = $.Deferred();
+                var context = new SP.ClientContext();
+                var web = context.get_web();
+                var list = web.get_lists().getByTitle(this._list);
+                var items = list.getItems(SP.CamlQuery.createAllItemsQuery());
+                this._spValueCache = [];
+                $("option", this.internalField).remove();
+                this._initialOptionElements.appendTo(this.internalField);
+                context.load(items);
+                context.executeQueryAsync(function () {
+                    for (var i = 0; i < items.get_count(); i++) {
+                        var item = items.get_item(i);
+                        var val = item.get_item(_this._valueColumn);
+                        if (_this._spFilterField === undefined || _this._spFilterField === null || _this._spFilterField === "") {
+                            _this.internalField.append('<option value="' + val + '">' + val + '</option>');
+                        }
+                        else {
+                            var filterValue = item.get_item(_this._spFilterField);
+                            _this.internalField.append('<option value="' + val + '" data-form-filtervalue="' + filterValue + '">' + val + '</option>');
+                        }
+                        var cacheItem = {
+                            key: val,
+                            spItems: []
+                        };
+                        _this._valuesToElementItems.forEach(function (field) {
+                            var spItem = {
+                                key: field.key,
+                                value: item.get_item(field.value)
+                            };
+                            cacheItem.spItems.push(spItem);
+                        });
+                        _this._spValueCache.push(cacheItem);
+                    }
+                    deferred.resolve();
+                }, function (sender, args) {
+                    _this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
+                    deferred.reject(args.get_message());
+                });
+                return deferred.promise();
+            };
+            DropDownField.prototype.wireupEvents = function () {
+                var _this = this;
+                this.internalField.change(function () {
+                    var val = $("option:selected", _this.internalField).val();
+                    _this._spValueCache.forEach(function (cacheItem) {
+                        if (cacheItem.key === val) {
+                            cacheItem.spItems.forEach(function (spItem) {
+                                $("#" + spItem.key).text(spItem.value);
+                            });
+                        }
+                    });
+                });
+            };
+            DropDownField.prototype.setupDependencies = function () {
+                // Setup depdencies
+                var dependencyFilter = this.internalField.attr("data-form-select-dependency-filter");
+                if (dependencyFilter === undefined || dependencyFilter === null || dependencyFilter === "") {
+                    return;
+                }
+                // Format: SPColumnOfTheListOfThisDropDown=FormFieldNameOfTheFilterDropDown
+                var depSplit = dependencyFilter.split("=");
+                this._spFilterField = depSplit[0];
+                var filterFromFormField = depSplit[1];
+                var _that = this;
+                $("[data-form-field=" + filterFromFormField + "]").change(function () {
+                    var _this = this;
+                    _that.loadList().done(function () {
+                        $("option[data-form-filtervalue]option[data-form-filtervalue!='" + $(_this).val() + "']", _that.internalField).remove();
+                    });
+                });
+            };
+            DropDownField.prototype.parseValuesToElements = function (valuesToElementsString) {
+                // Format: HtmlElementId=SPListFieldName,HtmlElementId2,SPListFieldName2,...
+                if (valuesToElementsString === undefined || valuesToElementsString === null || valuesToElementsString === "") {
+                    return;
+                }
+                var split = valuesToElementsString.split(",");
+                for (var i = 0; i < split.length; i++) {
+                    var parts = split[i].split("=");
+                    var vitem = {
+                        key: parts[0],
+                        value: parts[1]
+                    };
+                    this._valuesToElementItems.push(vitem);
+                }
+            };
+            return DropDownField;
+        })(FormField);
+        FormFields.DropDownField = DropDownField;
     })(FormFields = SPForms.FormFields || (SPForms.FormFields = {}));
 })(SPForms || (SPForms = {}));
 //# sourceMappingURL=SPForms_Fields.js.map

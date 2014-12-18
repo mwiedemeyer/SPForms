@@ -173,3 +173,17 @@ UpgradeLog*.htm
 # Microsoft Fakes
 FakesAssemblies/
 /SPForms.sln.ide
+/SPForms/SPForms_Fields.js
+/SPForms/SPForms_Fields.js.map
+/SPForms/SPForms_Main.js
+/SPForms/SPForms_Main.js.map
+/SPForms/SPForms_PeoplePicker2010.js
+/SPForms/SPForms_PeoplePicker2010.js.map
+/SPForms/SPForms_PeoplePicker2013.js
+/SPForms/SPForms_PeoplePicker2013.js.map
+/SPForms/SPForms_Profile2010.js
+/SPForms/SPForms_Profile2010.js.map
+/SPForms/SPForms_Profile2013.js
+/SPForms/SPForms_Profile2013.js.map
+/SPForms/SPForms_ProfileBase.js
+/SPForms/SPForms_ProfileBase.js.map

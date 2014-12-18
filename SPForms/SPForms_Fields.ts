@@ -16,7 +16,8 @@ module SPForms.FormFields {
         Text,
         Radio,
         DatePicker,
-        PeoplePicker
+        PeoplePicker,
+        DropDown
     }
 
     export enum ProfileProperty {
@@ -45,6 +46,8 @@ module SPForms.FormFields {
                     return new PeopleFormField(internalField);
                 case FormFieldType.DatePicker:
                     return new DatePickerField(internalField);
+                case FormFieldType.DropDown:
+                    return new DropDownField(internalField);
                 case FormFieldType.Text:
                 default:
                     return new FormField(internalField);
@@ -52,6 +55,11 @@ module SPForms.FormFields {
         }
 
         public static getFormFieldType(internalField: JQuery): FormFieldType {
+
+            if (internalField.get()[0].tagName.toLowerCase() === "select") {
+                return FormFieldType.DropDown;
+            }
+
             var type = internalField.attr("type");
             switch (type) {
                 case "radio":
@@ -162,7 +170,7 @@ module SPForms.FormFields {
 
         private peoplePickerMode: number;
         private peoplePicker2010: PeoplePicker2010;
-        private peoplePicker2013: PeoplePicker2013;        
+        private peoplePicker2013: PeoplePicker2013;
 
         constructor(internalField: JQuery) {
             super(internalField);
@@ -221,5 +229,150 @@ module SPForms.FormFields {
 
             this.internalField.datepicker();
         }
+    }
+
+    export class DropDownField extends FormField {
+
+        private _list: string;
+        private _valueColumn: string;
+        private _isLookup: boolean;
+        private _spValueCache: ISPCacheItem[];
+        private _valuesToElementItems: IKeyValue[];
+        private _spFilterField: string;
+        private _initialOptionElements: JQuery;
+
+        constructor(internalField: JQuery) {
+            super(internalField);
+
+            this._valuesToElementItems = [];
+            this._list = internalField.attr("data-form-select-list");
+            this._valueColumn = internalField.attr("data-form-select-valueColumn");
+            this._isLookup = (this._list !== undefined && this._list !== null && this._list !== "");
+
+            if (this._isLookup) {
+                this._initialOptionElements = $("option", internalField).detach();
+                this.parseValuesToElements(internalField.attr("data-form-select-setValuesToElements"));
+                this.setupDependencies();
+                this.loadList();
+                this.wireupEvents();
+            }
+        }
+
+        private loadList(): JQueryPromise<void> {
+
+            var deferred = $.Deferred<void>();
+
+            var context = new SP.ClientContext();
+            var web = context.get_web();
+            var list = web.get_lists().getByTitle(this._list);
+            var items = list.getItems(SP.CamlQuery.createAllItemsQuery());
+
+            this._spValueCache = [];
+            $("option", this.internalField).remove();
+            this._initialOptionElements.appendTo(this.internalField);
+
+            context.load(items);
+            context.executeQueryAsync(() => {
+
+                for (var i = 0; i < items.get_count(); i++) {
+                    var item = items.get_item(i);
+                    var val = item.get_item(this._valueColumn);
+
+                    if (this._spFilterField === undefined || this._spFilterField === null || this._spFilterField === "") {
+                        this.internalField.append('<option value="' + val + '">' + val + '</option>');
+                    }
+                    else {
+                        var filterValue = item.get_item(this._spFilterField);
+                        this.internalField.append('<option value="' + val + '" data-form-filtervalue="' + filterValue + '">' + val + '</option>');
+                    }
+
+                    var cacheItem: ISPCacheItem = {
+                        key: val,
+                        spItems: []
+                    };
+
+                    this._valuesToElementItems.forEach((field) => {
+                        var spItem: IKeyValue = {
+                            key: field.key,
+                            value: item.get_item(field.value)
+                        };
+                        cacheItem.spItems.push(spItem);
+                    });
+
+                    this._spValueCache.push(cacheItem);                    
+                }
+                deferred.resolve();
+            }, (sender, args) => {
+                    this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
+                    deferred.reject(args.get_message());
+                });
+
+            return deferred.promise();
+        }
+
+        private wireupEvents(): void {
+            this.internalField.change(() => {
+                var val = $("option:selected", this.internalField).val();
+
+                this._spValueCache.forEach((cacheItem) => {
+                    if (cacheItem.key === val) {
+                        cacheItem.spItems.forEach((spItem) => {
+                            $("#" + spItem.key).text(spItem.value);
+                        });
+                    }
+                });
+            });
+        }
+
+        private setupDependencies(): void {
+            // Setup depdencies
+            var dependencyFilter = this.internalField.attr("data-form-select-dependency-filter");
+            if (dependencyFilter === undefined || dependencyFilter === null || dependencyFilter === "") {
+                return;
+            }
+
+            // Format: SPColumnOfTheListOfThisDropDown=FormFieldNameOfTheFilterDropDown
+            var depSplit = dependencyFilter.split("=");
+            this._spFilterField = depSplit[0];
+            var filterFromFormField = depSplit[1];
+
+            var _that = this;
+            $("[data-form-field=" + filterFromFormField + "]").change(function () {
+                _that.loadList().done(() => {
+                    $("option[data-form-filtervalue]option[data-form-filtervalue!='" + $(this).val() + "']", _that.internalField).remove();
+                });
+            });
+        }
+
+        private parseValuesToElements(valuesToElementsString: string): void {
+
+            // Format: HtmlElementId=SPListFieldName,HtmlElementId2,SPListFieldName2,...
+
+            if (valuesToElementsString === undefined || valuesToElementsString === null || valuesToElementsString === "") {
+                return;
+            }
+
+            var split = valuesToElementsString.split(",");
+            for (var i = 0; i < split.length; i++) {
+                var parts = split[i].split("=");
+
+                var vitem: IKeyValue = {
+                    key: parts[0],
+                    value: parts[1]
+                };
+
+                this._valuesToElementItems.push(vitem);
+            }
+        }
+    }
+
+    interface ISPCacheItem {
+        key: string;
+        spItems: IKeyValue[];
+    }
+
+    interface IKeyValue {
+        key: string;
+        value: string;
     }
 }

@@ -3,7 +3,6 @@
 <!-- Only required for SharePoint 2010: -->
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.SPServices/2014.01/jquery.SPServices.min.js"></script>
 <!-- END: Only required for SharePoint 2010 -->
-
 <!-- Only required for SharePoint 2013 PeoplePicker: -->
 <script src="/_layouts/15/clientforms.js"></script>
 <script src="/_layouts/15/clientpeoplepicker.js"></script>
@@ -46,6 +45,30 @@
     <br />
     <label for="people1">Manager:</label>
     <input type="text" id="people1" data-form-peoplepicker="true" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
+    <br />
+    <label for="dd1">Selection 1</label>
+    <select id="dd1" data-form-field="Selection1">
+        <option value="A1">This is A1</option>
+        <option value="A2">This is A2</option>
+        <option value="A3">This is A3</option>
+    </select>
+    <br />
+    <label for="dd2">Selection from SP list</label>
+    <!-- Load option items from the Title column of the SPDropDownList1 -->
+    <select id="dd2" data-form-field="Selection2" data-form-select-list="SPDropDownList1" data-form-select-valuecolumn="Title">
+        <option value="">&lt;Please select one&gt;</option>
+    </select>
+    <br />
+    <label for="dd3">Selection from SP list, dependend on previous selection</label>
+    <!-- Load option items from the Title column of the SPDropDownList2, but filter the elements to only show items where the ColumnToFilterFromSPDropDownList2 equals the selected value from Selection2
+         Additionally, set the text of the spans #Label1 and #TitleLabel to the values from the specified columns of SPDropDownList2 -->
+    <select id="dd3" data-form-field="Selection3" data-form-select-list="SPDropDownList2" data-form-select-valuecolumn="Title" data-form-select-dependency-filter="ColumnToFilterFromSPDropDownList2=Selection2" data-form-select-setvaluestoelements="Label1=AdditionalColumn1OfSPDropDownList2,TitleLabel=Title">
+        <option value="">&lt;Please select one&gt;</option>
+    </select>
+    <br />
+    <span>Title from SPDropDownList2: </span><span id="TitleLabel"></span>
+    <br />
+    <span>Label1 from SPDropDownList2: </span><span id="Label1"></span>
     <br />
     <input type="button" value="Save" data-form-submit="true" data-form-submit-list="MyList" data-form-submit-onsuccess="onSubmitSuccess" data-form-submit-onfailed="onSubmitFailed" data-form-submit-onvalidationerror="onValidationError" />
 </div>

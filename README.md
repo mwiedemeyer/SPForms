@@ -20,10 +20,14 @@ SPForms depends on the following libraries:
 - [jQueryUI](http://jqueryui.com)
 - [SPServices](http://spservices.codeplex.com) => Only required on SharePoint 2010
 
-Just get the required files
+Just download the required files
 ----------------------------
 For SharePoint 2010:
+
 - [SPForms.2010.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2010.js) (or [SPForms.2010.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2010.min.js))
+
+For SharePoint 2013:
+
 - [SPForms.2013.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2013.js) (or [SPForms.2013.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2013.min.js))
 
 
@@ -37,7 +41,7 @@ First add the JavaScript file (to your PageLayout, Masterpage or directly within
 
     <script type="text/javascript" src="SPForms.2013.js"></script>
 
-If you want to use the people picker (in SP2013), add the following references to the existing SharePoint js files:
+If you want to use the people picker (in SP2013), add the following references to the existing SharePoint js files (before the SPForms.2013.js):
 
     <script src="/_layouts/15/clientforms.js"></script>
     <script src="/_layouts/15/clientpeoplepicker.js"></script>
@@ -63,7 +67,7 @@ Second, create a form (for example directly within a Content Editor Web Part):
     </div>
 ```
 
-Now add the data- properties to it to make it a SharePoint list form:
+Now add the data-form- attributes to it to make it a SharePoint list form:
 (make sure, all input elements have a valid id attribute)
 
 ```HTML
@@ -113,7 +117,7 @@ Now to the magic stuff, just add some JavaScript:
 </style>
 ```
 
-You can even prepopulate fields by querystring.
+You can even prepopulate fields by query string.
 Just add `form-` to the `data-form-field` names and append them to the URL.
 
     /myForm.aspx?form-title=the%20title
@@ -138,6 +142,14 @@ Here are the available attributes:
         data-form-submit-onsuccess              Javascript function to execute after successful submit
         data-form-submit-onfailed               Javascript function to execute after failure
         data-form-submit-onvalidationerror      Javascript function to execute if any field is invalid
+        
+        For details about the DropDown options see the Sample.html
+        data-form-select-list                   On select elements, load items from the specified SharePoint list
+        data-form-select-valueColumn            Defines which column from the list should be used as options text and value
+        data-form-select-setValuesToElements    Set the values of additional columns from the SharePoint list to other HTML elements
+                                                Format: HtmlElementId=ColumnFromSPList (you can have multiple separated by comma)
+        data-form-select-dependency-filter      Filter this drop down based on another drop down
+                                                Format: ColumnToFilterFromSPList=FieldNameOfAnotherDropDown
 
 For the data-form-profile attribute, the following values are allowed:
 
