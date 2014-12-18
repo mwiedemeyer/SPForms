@@ -41,7 +41,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-    <None Include="SPForms.2010.js.bundle" />
+    <None Include="SPForms.2010.js.bundle">
+      <SubType>Designer</SubType>
+    </None>
     <Content Include="SPForms.2010.js">
       <DependentUpon>SPForms.2010.js.bundle</DependentUpon>
     </Content>
@@ -54,9 +56,6 @@
     <Content Include="SPForms.2013.min.js">
       <DependentUpon>SPForms.2013.js</DependentUpon>
     </Content>
-    <Content Include="SPForms.min.js.map">
-      <DependentUpon>SPForms.min.js</DependentUpon>
-    </Content>
     <Content Include="SPForms.2010.min.js.map">
       <DependentUpon>SPForms.2010.min.js</DependentUpon>
     </Content>
@@ -65,14 +64,6 @@
     </Content>
     <Content Include="SPForms.2013.min.js.map">
       <DependentUpon>SPForms.2013.min.js</DependentUpon>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="SPForms.js">
-      <DependentUpon>SPForms.2010.js.bundle</DependentUpon>
-    </Content>
-    <Content Include="SPForms.min.js">
-      <DependentUpon>SPForms.js</DependentUpon>
     </Content>
   </ItemGroup>
   <ItemGroup>
