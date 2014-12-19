@@ -202,17 +202,19 @@
                 var fieldName = field.get_name();
                 var content = field.get_value();
 
-                if (field.get_type() === FormFields.FormFieldType.PeoplePicker) {
-                    if (content !== null && content !== "") {
-                        var web = context.get_web();
-                        content = web.ensureUser(content);
+                if (field.internalField.is(":visible")) {
+                    if (field.get_type() === FormFields.FormFieldType.PeoplePicker) {
+                        if (content !== null && content !== "") {
+                            var web = context.get_web();
+                            content = web.ensureUser(content);
+                        }
+                        else {
+                            content = null;
+                        }
                     }
-                    else {
-                        content = null;
-                    }
-                }
 
-                listItem.set_item(fieldName, content);
+                    listItem.set_item(fieldName, content);
+                }
             });
 
             listItem.update();
