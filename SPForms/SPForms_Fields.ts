@@ -9,6 +9,7 @@ module SPForms.FormFields {
         get_isrequired(): boolean;
         get_isProfileField(): boolean;
         get_profileProperty(): ProfileProperty;
+        get_includeHidden(): boolean;
         validate(): boolean;
     }
 
@@ -34,7 +35,7 @@ module SPForms.FormFields {
 
     export class FormField implements IFormField {
 
-        internalField: JQuery;
+        public internalField: JQuery;
 
         //#region static methods to get field by type
 
@@ -87,37 +88,37 @@ module SPForms.FormFields {
 
         //#region Properties
 
-        get_name(): string {
+        public get_name(): string {
             return this.internalField.attr("data-form-field");
         }
 
-        get_type(): FormFieldType {
+        public get_type(): FormFieldType {
             return FormField.getFormFieldType(this.internalField);
         }
 
-        get_value(): any {
+        public get_value(): any {
             return this.internalField.val();
         }
 
-        set_value(val: string) {
+        public set_value(val: string) {
             this.internalField.val(val);
         }
 
-        get_isrequired(): boolean {
+        public get_isrequired(): boolean {
             if (!this.internalField.is(":visible"))
                 return false;
-            return (this.internalField.attr("data-form-required") !== undefined);
+            return (this.internalField.attr("data-form-required") !== undefined && this.internalField.attr("data-form-required") === "true");
         }
 
-        get_validatorExpression(): string {
+        public get_validatorExpression(): string {
             return this.internalField.attr("data-form-validate");
         }
 
-        get_isProfileField(): boolean {
+        public get_isProfileField(): boolean {
             return (this.internalField.attr("data-form-profile") !== undefined);
         }
 
-        get_profileProperty(): ProfileProperty {
+        public get_profileProperty(): ProfileProperty {
             try {
                 return ProfileProperty[this.internalField.attr("data-form-profile")];
             } catch (e) {
@@ -125,9 +126,13 @@ module SPForms.FormFields {
             }
         }
 
+        public get_includeHidden(): boolean {
+            return (this.internalField.attr("data-form-includeHidden") !== undefined && this.internalField.attr("data-form-includeHidden") === "true");
+        }
+
         //#endregion
 
-        validate(): boolean {
+        public validate(): boolean {
             if (this.get_isrequired() && this.get_value().length === 0) {
                 var validationMessage = this.internalField.attr("data-form-validationmessage") || "Required";
                 this.internalField.addClass("form-invalid");
@@ -262,50 +267,52 @@ module SPForms.FormFields {
 
             var deferred = $.Deferred<void>();
 
-            var context = new SP.ClientContext();
-            var web = context.get_web();
-            var list = web.get_lists().getByTitle(this._list);
-            var items = list.getItems(SP.CamlQuery.createAllItemsQuery());
+            SP.SOD.loadMultiple(['sp.js'],() => {
+                var context = new SP.ClientContext();
+                var web = context.get_web();
+                var list = web.get_lists().getByTitle(this._list);
+                var items = list.getItems(SP.CamlQuery.createAllItemsQuery());
 
-            this._spValueCache = [];
-            $("option", this.internalField).remove();
-            this._initialOptionElements.appendTo(this.internalField);
+                this._spValueCache = [];
+                $("option", this.internalField).remove();
+                this._initialOptionElements.appendTo(this.internalField);
 
-            context.load(items);
-            context.executeQueryAsync(() => {
+                context.load(items);
+                context.executeQueryAsync(() => {
 
-                for (var i = 0; i < items.get_count(); i++) {
-                    var item = items.get_item(i);
-                    var val = item.get_item(this._valueColumn);
+                    for (var i = 0; i < items.get_count(); i++) {
+                        var item = items.get_item(i);
+                        var val = item.get_item(this._valueColumn);
 
-                    if (this._spFilterField === undefined || this._spFilterField === null || this._spFilterField === "") {
-                        this.internalField.append('<option value="' + val + '">' + val + '</option>');
-                    }
-                    else {
-                        var filterValue = item.get_item(this._spFilterField);
-                        this.internalField.append('<option value="' + val + '" data-form-filtervalue="' + filterValue + '">' + val + '</option>');
-                    }
+                        if (this._spFilterField === undefined || this._spFilterField === null || this._spFilterField === "") {
+                            this.internalField.append('<option value="' + val + '">' + val + '</option>');
+                        }
+                        else {
+                            var filterValue = item.get_item(this._spFilterField);
+                            this.internalField.append('<option value="' + val + '" data-form-filtervalue="' + filterValue + '">' + val + '</option>');
+                        }
 
-                    var cacheItem: ISPCacheItem = {
-                        key: val,
-                        spItems: []
-                    };
-
-                    this._valuesToElementItems.forEach((field) => {
-                        var spItem: IKeyValue = {
-                            key: field.key,
-                            value: item.get_item(field.value)
+                        var cacheItem: ISPCacheItem = {
+                            key: val,
+                            spItems: []
                         };
-                        cacheItem.spItems.push(spItem);
-                    });
 
-                    this._spValueCache.push(cacheItem);                    
-                }
-                deferred.resolve();
-            }, (sender, args) => {
-                    this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
-                    deferred.reject(args.get_message());
-                });
+                        this._valuesToElementItems.forEach((field) => {
+                            var spItem: IKeyValue = {
+                                key: field.key,
+                                value: item.get_item(field.value)
+                            };
+                            cacheItem.spItems.push(spItem);
+                        });
+
+                        this._spValueCache.push(cacheItem);
+                    }
+                    deferred.resolve();
+                },(sender, args) => {
+                        this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
+                        deferred.reject(args.get_message());
+                    });
+            });
 
             return deferred.promise();
         }

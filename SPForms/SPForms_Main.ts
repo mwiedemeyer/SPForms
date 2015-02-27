@@ -202,18 +202,20 @@
                 var fieldName = field.get_name();
                 var content = field.get_value();
 
-                if (field.internalField.is(":visible")) {
-                    if (field.get_type() === FormFields.FormFieldType.PeoplePicker) {
-                        if (content !== null && content !== "") {
-                            var web = context.get_web();
-                            content = web.ensureUser(content);
-                        }
-                        else {
-                            content = null;
-                        }
+                if (field.get_type() === FormFields.FormFieldType.PeoplePicker) {
+                    if (content !== null && content !== "") {
+                        var web = context.get_web();
+                        content = web.ensureUser(content);
                     }
-
+                    else {
+                        content = null;
+                    }
                     listItem.set_item(fieldName, content);
+                }
+                else {
+                    if (field.internalField.is(":visible") || field.get_includeHidden()) {
+                        listItem.set_item(fieldName, content);
+                    }
                 }
             });
 

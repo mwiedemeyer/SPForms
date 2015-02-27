@@ -37,8 +37,10 @@ It's super simple: Just create a standard HTML form and apply some attributes.
 You can use whatever you want: HTML5 stuff, JavaScript frameworks, JavaScript libraries, etc.
 
 Ok, here is an example of a basic form to write to a SharePoint list:
-First add the JavaScript file (to your PageLayout, Masterpage or directly within a Content Editor Web Part):
+First add a reference to the JavaScript file(s) (to your PageLayout, Masterpage or directly within a Content Editor Web Part):
 
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>    
     <script type="text/javascript" src="SPForms.2013.js"></script>
 
 If you want to use the people picker (in SP2013), add the following references to the existing SharePoint js files (before the SPForms.2013.js):
@@ -60,6 +62,7 @@ Second, create a form (for example directly within a Content Editor Web Part):
         <input type="radio" name="AcceptLicense" id="radio2" value="No" />
         <label for="radio2">No</label>
         <br />
+        <input type="hidden" value="some hidden value" id="hidden1" />
         <label for="people1">Manager:</label>
         <input type="text" id="people1" />
         <br />
@@ -81,6 +84,7 @@ Now add the data-form- attributes to it to make it a SharePoint list form:
         <input type="radio" name="AcceptLicense" id="radio2" value="No" data-form-field="LicenseAccepted" />
         <label for="radio2">No</label>
         <br />
+        <input type="hidden" value="some hidden value" id="hidden1" data-form-field="HiddenField" data-form-includeHidden="true" />
         <label for="people1">Manager:</label>
         <input type="text" id="people1" data-form-peoplepicker="true" data-form-field="Manager" data-form-peoplepicker-value="accountname" />
         <br />
@@ -130,6 +134,8 @@ Here are the available attributes:
         data-form-settings                      Valid just once on the main forms div
         data-form-field                         Column name in the SharePoint list 
         data-form-required                      true|false
+        data-form-includeHidden                 true|false Defines if value is written to the list even if the element is hidden
+                                                If this attribute is omitted, only values of visible elements will be written to the list
         data-form-validate                      RegEx to validate the value
         data-form-validationmessage             Message to display within the tooltip on validation/required errors
         data-form-peoplepicker                  true to define an input box as a people picker

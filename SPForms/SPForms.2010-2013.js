@@ -92,31 +92,31 @@ var SPForms;
                 _this.fields.forEach(function (field) {
                     var profileProperty = field.get_profileProperty();
                     switch (profileProperty) {
-                        case 1 /* DisplayName */:
+                        case SPForms.FormFields.ProfileProperty.DisplayName:
                             field.set_value(data.displayName);
                             break;
-                        case 2 /* FirstName */:
+                        case SPForms.FormFields.ProfileProperty.FirstName:
                             field.set_value(data.firstName);
                             break;
-                        case 3 /* LastName */:
+                        case SPForms.FormFields.ProfileProperty.LastName:
                             field.set_value(data.lastName);
                             break;
-                        case 7 /* Phone */:
+                        case SPForms.FormFields.ProfileProperty.Phone:
                             field.set_value(data.phone);
                             break;
-                        case 6 /* Department */:
+                        case SPForms.FormFields.ProfileProperty.Department:
                             field.set_value(data.department);
                             break;
-                        case 8 /* Title */:
+                        case SPForms.FormFields.ProfileProperty.Title:
                             field.set_value(data.title);
                             break;
-                        case 4 /* EMail */:
+                        case SPForms.FormFields.ProfileProperty.EMail:
                             field.set_value(data.email);
                             break;
-                        case 5 /* Company */:
+                        case SPForms.FormFields.ProfileProperty.Company:
                             field.set_value(data.company);
                             break;
-                        case 0 /* Unknown */:
+                        case SPForms.FormFields.ProfileProperty.Unknown:
                         default:
                             break;
                     }
@@ -165,17 +165,20 @@ var SPForms;
             this.fields.forEach(function (field) {
                 var fieldName = field.get_name();
                 var content = field.get_value();
-                if (field.internalField.is(":visible")) {
-                    if (field.get_type() === 3 /* PeoplePicker */) {
-                        if (content !== null && content !== "") {
-                            var web = context.get_web();
-                            content = web.ensureUser(content);
-                        }
-                        else {
-                            content = null;
-                        }
+                if (field.get_type() === SPForms.FormFields.FormFieldType.PeoplePicker) {
+                    if (content !== null && content !== "") {
+                        var web = context.get_web();
+                        content = web.ensureUser(content);
+                    }
+                    else {
+                        content = null;
                     }
                     listItem.set_item(fieldName, content);
+                }
+                else {
+                    if (field.internalField.is(":visible") || field.get_includeHidden()) {
+                        listItem.set_item(fieldName, content);
+                    }
                 }
             });
             listItem.update();
@@ -230,6 +233,7 @@ if (!Array.prototype.forEach) {
         }
     };
 }
+//#endregion 
 //# sourceMappingURL=SPForms_Main.js.map
 ///#source 1 1 /SPForms_Fields.js
 var __extends = this.__extends || function (d, b) {
@@ -321,7 +325,7 @@ var SPForms;
             FormField.prototype.get_isrequired = function () {
                 if (!this.internalField.is(":visible"))
                     return false;
-                return (this.internalField.attr("data-form-required") !== undefined);
+                return (this.internalField.attr("data-form-required") !== undefined && this.internalField.attr("data-form-required") === "true");
             };
             FormField.prototype.get_validatorExpression = function () {
                 return this.internalField.attr("data-form-validate");
@@ -336,6 +340,9 @@ var SPForms;
                 catch (e) {
                     return 0 /* Unknown */;
                 }
+            };
+            FormField.prototype.get_includeHidden = function () {
+                return (this.internalField.attr("data-form-includeHidden") !== undefined && this.internalField.attr("data-form-includeHidden") === "true");
             };
             //#endregion
             FormField.prototype.validate = function () {
@@ -451,42 +458,44 @@ var SPForms;
             DropDownField.prototype.loadList = function () {
                 var _this = this;
                 var deferred = $.Deferred();
-                var context = new SP.ClientContext();
-                var web = context.get_web();
-                var list = web.get_lists().getByTitle(this._list);
-                var items = list.getItems(SP.CamlQuery.createAllItemsQuery());
-                this._spValueCache = [];
-                $("option", this.internalField).remove();
-                this._initialOptionElements.appendTo(this.internalField);
-                context.load(items);
-                context.executeQueryAsync(function () {
-                    for (var i = 0; i < items.get_count(); i++) {
-                        var item = items.get_item(i);
-                        var val = item.get_item(_this._valueColumn);
-                        if (_this._spFilterField === undefined || _this._spFilterField === null || _this._spFilterField === "") {
-                            _this.internalField.append('<option value="' + val + '">' + val + '</option>');
-                        }
-                        else {
-                            var filterValue = item.get_item(_this._spFilterField);
-                            _this.internalField.append('<option value="' + val + '" data-form-filtervalue="' + filterValue + '">' + val + '</option>');
-                        }
-                        var cacheItem = {
-                            key: val,
-                            spItems: []
-                        };
-                        _this._valuesToElementItems.forEach(function (field) {
-                            var spItem = {
-                                key: field.key,
-                                value: item.get_item(field.value)
+                SP.SOD.loadMultiple(['sp.js'], function () {
+                    var context = new SP.ClientContext();
+                    var web = context.get_web();
+                    var list = web.get_lists().getByTitle(_this._list);
+                    var items = list.getItems(SP.CamlQuery.createAllItemsQuery());
+                    _this._spValueCache = [];
+                    $("option", _this.internalField).remove();
+                    _this._initialOptionElements.appendTo(_this.internalField);
+                    context.load(items);
+                    context.executeQueryAsync(function () {
+                        for (var i = 0; i < items.get_count(); i++) {
+                            var item = items.get_item(i);
+                            var val = item.get_item(_this._valueColumn);
+                            if (_this._spFilterField === undefined || _this._spFilterField === null || _this._spFilterField === "") {
+                                _this.internalField.append('<option value="' + val + '">' + val + '</option>');
+                            }
+                            else {
+                                var filterValue = item.get_item(_this._spFilterField);
+                                _this.internalField.append('<option value="' + val + '" data-form-filtervalue="' + filterValue + '">' + val + '</option>');
+                            }
+                            var cacheItem = {
+                                key: val,
+                                spItems: []
                             };
-                            cacheItem.spItems.push(spItem);
-                        });
-                        _this._spValueCache.push(cacheItem);
-                    }
-                    deferred.resolve();
-                }, function (sender, args) {
-                    _this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
-                    deferred.reject(args.get_message());
+                            _this._valuesToElementItems.forEach(function (field) {
+                                var spItem = {
+                                    key: field.key,
+                                    value: item.get_item(field.value)
+                                };
+                                cacheItem.spItems.push(spItem);
+                            });
+                            _this._spValueCache.push(cacheItem);
+                        }
+                        deferred.resolve();
+                    }, function (sender, args) {
+                        _this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
+                        deferred.reject(args.get_message());
+                    });
                 });
                 return deferred.promise();
             };
