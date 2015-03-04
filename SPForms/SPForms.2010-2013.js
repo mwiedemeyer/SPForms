@@ -4,6 +4,7 @@ var SPForms;
     var FormManager = (function () {
         function FormManager(formId) {
             this.fields = [];
+            this.isEdit = false;
             this.form = $("#" + formId);
         }
         FormManager.init = function (formId) {
@@ -21,7 +22,8 @@ var SPForms;
                 _this.fields.push(field);
             });
             this.populateFieldsFromQueryString();
-            this.loadProfileData();
+            if (!this.isEdit)
+                this.loadProfileData();
         };
         FormManager.prototype.initialize = function () {
             var settingsAttr = this.form.attr("data-form-settings");
@@ -65,11 +67,17 @@ var SPForms;
         };
         // Set field values if defined in QueryString
         FormManager.prototype.populateFieldsFromQueryString = function () {
+            var _this = this;
             var par = Helper.getParameters();
             if (par === null)
                 return;
             // check if parameter begins with "form-" and set the fields value
             par.forEach(function (p) {
+                if (p.key === "form-edit-id") {
+                    _this.isEdit = true;
+                    _this.loadExistingItem(parseInt(p.value, 10));
+                    return;
+                }
                 if (p.key.indexOf("form-") > -1) {
                     var fieldName = p.key.substring(5);
                     if ($("[data-form-field=" + fieldName + "]").length > 0)
@@ -123,6 +131,25 @@ var SPForms;
                 });
             });
         };
+        // load existing item into fields
+        FormManager.prototype.loadExistingItem = function (itemId) {
+            var _this = this;
+            var listName = this.form.find("[data-form-submit]").attr("data-form-submit-list");
+            SP.SOD.executeOrDelayUntilScriptLoaded(function () {
+                var context = new SP.ClientContext();
+                var web = context.get_web();
+                var list = web.get_lists().getByTitle(listName);
+                var item = list.getItemById(itemId);
+                context.load(item, "FieldValuesAsText");
+                context.executeQueryAsync(function () {
+                    var values = item.get_fieldValuesAsText();
+                    _this.fields.forEach(function (field) {
+                        field.set_value(values.get_item(field.get_name()));
+                    });
+                }, function (sender, args) {
+                });
+            }, "sp.js");
+        };
         // Validate all field controls
         FormManager.prototype.validateControls = function () {
             var isValid = true;
@@ -142,7 +169,7 @@ var SPForms;
             var web = context.get_web();
             var list = web.get_lists().getByTitle(listName);
             // check for max participants before adding the new item
-            if (this.settings === null || this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1) {
+            if (this.settings === null || this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1 || this.isEdit) {
                 this.createListItemInternal(deferred, context, list);
             }
             else {
@@ -381,7 +408,11 @@ var SPForms;
             }
             RadioFormField.prototype.get_value = function () {
                 var groupName = this.internalField.attr("name");
-                return $("[name=" + groupName + "]:checked").val();
+                return $('[name="' + groupName + '"]:checked').val();
+            };
+            RadioFormField.prototype.set_value = function (val) {
+                var groupName = this.internalField.attr("name");
+                $('[name="' + groupName + '"][value="' + val + '"]').prop("checked", "true");
             };
             return RadioFormField;
         })(FormField);
@@ -458,7 +489,7 @@ var SPForms;
             DropDownField.prototype.loadList = function () {
                 var _this = this;
                 var deferred = $.Deferred();
-                SP.SOD.loadMultiple(['sp.js'], function () {
+                SP.SOD.executeOrDelayUntilScriptLoaded(function () {
                     var context = new SP.ClientContext();
                     var web = context.get_web();
                     var list = web.get_lists().getByTitle(_this._list);
@@ -496,7 +527,7 @@ var SPForms;
                         _this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
                         deferred.reject(args.get_message());
                     });
-                });
+                }, "sp.js");
                 return deferred.promise();
             };
             DropDownField.prototype.wireupEvents = function () {

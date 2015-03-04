@@ -165,9 +165,13 @@ module SPForms.FormFields {
     }
 
     export class RadioFormField extends FormField {
-        get_value(): any {
+        public get_value(): any {
             var groupName = this.internalField.attr("name");
-            return $("[name=" + groupName + "]:checked").val();
+            return $('[name="' + groupName + '"]:checked').val();
+        }
+        public set_value(val: string) {
+            var groupName = this.internalField.attr("name");
+            $('[name="' + groupName + '"][value="' + val + '"]').prop("checked", "true");
         }
     }
 
@@ -208,7 +212,7 @@ module SPForms.FormFields {
             }
         }
 
-        get_value(): any {
+        public get_value(): any {
 
             if (this.peoplePickerMode === 2010) {
                 switch (this.internalField.attr("data-form-peoplepicker-value")) {
@@ -267,7 +271,7 @@ module SPForms.FormFields {
 
             var deferred = $.Deferred<void>();
 
-            SP.SOD.loadMultiple(['sp.js'],() => {
+            SP.SOD.executeOrDelayUntilScriptLoaded(() => {
                 var context = new SP.ClientContext();
                 var web = context.get_web();
                 var list = web.get_lists().getByTitle(this._list);
@@ -312,7 +316,7 @@ module SPForms.FormFields {
                         this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
                         deferred.reject(args.get_message());
                     });
-            });
+            }, "sp.js");
 
             return deferred.promise();
         }

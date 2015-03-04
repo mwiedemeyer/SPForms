@@ -13,6 +13,7 @@
         private settings: IFormSettings;
         private form: JQuery;
         private fields: FormFields.IFormField[] = [];
+        private isEdit: boolean = false;
 
         public static init(formId: string): FormManager {
             var f = new FormManager(formId);
@@ -34,7 +35,8 @@
             });
 
             this.populateFieldsFromQueryString();
-            this.loadProfileData();
+            if (!this.isEdit)
+                this.loadProfileData();
         }
 
         private initialize(): void {
@@ -70,17 +72,17 @@
 
                 this.createListItem(listName)
                     .done(() => {
-                        var onSuccessFunction = button.attr("data-form-submit-onsuccess");
-                        if (onSuccessFunction !== undefined) {
-                            window[onSuccessFunction]();
-                        }
-                    })
+                    var onSuccessFunction = button.attr("data-form-submit-onsuccess");
+                    if (onSuccessFunction !== undefined) {
+                        window[onSuccessFunction]();
+                    }
+                })
                     .fail((message) => {
-                        var onFailedFunction = button.attr("data-form-submit-onfailed");
-                        if (onFailedFunction !== undefined) {
-                            window[onFailedFunction](message);
-                        }
-                    });
+                    var onFailedFunction = button.attr("data-form-submit-onfailed");
+                    if (onFailedFunction !== undefined) {
+                        window[onFailedFunction](message);
+                    }
+                });
             });
         }
 
@@ -91,6 +93,13 @@
                 return;
             // check if parameter begins with "form-" and set the fields value
             par.forEach((p) => {
+
+                if (p.key === "form-edit-id") {
+                    this.isEdit = true;
+                    this.loadExistingItem(parseInt(p.value, 10));
+                    return;
+                }
+
                 if (p.key.indexOf("form-") > -1) {
                     var fieldName = p.key.substring(5);
                     if ($("[data-form-field=" + fieldName + "]").length > 0)
@@ -113,39 +122,63 @@
 
             Profile.ProfileManager.getProfileAsync()
                 .done((data) => {
-                    this.fields.forEach((field) => {
-                        var profileProperty = field.get_profileProperty();
-                        switch (profileProperty) {
-                            case FormFields.ProfileProperty.DisplayName:
-                                field.set_value(data.displayName);
-                                break;
-                            case FormFields.ProfileProperty.FirstName:
-                                field.set_value(data.firstName);
-                                break;
-                            case FormFields.ProfileProperty.LastName:
-                                field.set_value(data.lastName);
-                                break;
-                            case FormFields.ProfileProperty.Phone:
-                                field.set_value(data.phone);
-                                break;
-                            case FormFields.ProfileProperty.Department:
-                                field.set_value(data.department);
-                                break;
-                            case FormFields.ProfileProperty.Title:
-                                field.set_value(data.title);
-                                break;
-                            case FormFields.ProfileProperty.EMail:
-                                field.set_value(data.email);
-                                break;
-                            case FormFields.ProfileProperty.Company:
-                                field.set_value(data.company);
-                                break;
-                            case FormFields.ProfileProperty.Unknown:
-                            default:
-                                break;
-                        }
-                    });
+                this.fields.forEach((field) => {
+                    var profileProperty = field.get_profileProperty();
+                    switch (profileProperty) {
+                        case FormFields.ProfileProperty.DisplayName:
+                            field.set_value(data.displayName);
+                            break;
+                        case FormFields.ProfileProperty.FirstName:
+                            field.set_value(data.firstName);
+                            break;
+                        case FormFields.ProfileProperty.LastName:
+                            field.set_value(data.lastName);
+                            break;
+                        case FormFields.ProfileProperty.Phone:
+                            field.set_value(data.phone);
+                            break;
+                        case FormFields.ProfileProperty.Department:
+                            field.set_value(data.department);
+                            break;
+                        case FormFields.ProfileProperty.Title:
+                            field.set_value(data.title);
+                            break;
+                        case FormFields.ProfileProperty.EMail:
+                            field.set_value(data.email);
+                            break;
+                        case FormFields.ProfileProperty.Company:
+                            field.set_value(data.company);
+                            break;
+                        case FormFields.ProfileProperty.Unknown:
+                        default:
+                            break;
+                    }
                 });
+            });
+        }
+
+        // load existing item into fields
+        private loadExistingItem(itemId: number): void {
+
+            var listName = this.form.find("[data-form-submit]").attr("data-form-submit-list");
+
+            SP.SOD.executeOrDelayUntilScriptLoaded(() => {
+                var context = new SP.ClientContext();
+                var web = context.get_web();
+                var list = web.get_lists().getByTitle(listName);
+                var item = list.getItemById(itemId);
+
+                context.load(item,"FieldValuesAsText");
+                context.executeQueryAsync(
+                    () => {
+                        var values = item.get_fieldValuesAsText();
+                        this.fields.forEach((field) => {
+                            field.set_value(values.get_item(field.get_name()));
+                        });
+                    },
+                    (sender, args) => {
+                    });
+            }, "sp.js");
         }
 
         // Validate all field controls
@@ -172,7 +205,7 @@
             var list = web.get_lists().getByTitle(listName);
 
             // check for max participants before adding the new item
-            if (this.settings === null || this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1) {
+            if (this.settings === null || this.settings.maxParticipants === undefined || this.settings.maxParticipants < 1 || this.isEdit) {
                 this.createListItemInternal(deferred, context, list);
             }
             else {

@@ -127,6 +127,12 @@ Just add `form-` to the `data-form-field` names and append them to the URL.
     /myForm.aspx?form-title=the%20title
 
 
+New: If you want to use the form to edit existing items, append this to the query string:
+
+    /myForm.aspx?form-edit-id=23
+
+This will load the item with ID=23. Currently the people picker field cannot be edited and is always empty on edit.
+
 Available attributes
 --------------------
 Here are the available attributes:
