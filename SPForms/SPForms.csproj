@@ -20,6 +20,7 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,41 +40,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="gulpfile.js" />
     <Content Include="packages.config" />
-    <Content Include="SPForms.2010-2013.js">
-      <DependentUpon>SPForms.2010-2013.js.bundle</DependentUpon>
-    </Content>
-    <Content Include="SPForms.2010-2013.js.bundle" />
-    <Content Include="SPForms.2010-2013.min.js.map">
-      <DependentUpon>SPForms.2010-2013.min.js</DependentUpon>
-    </Content>
-    <None Include="SPForms.2010.js.bundle">
-      <SubType>Designer</SubType>
-    </None>
-    <Content Include="SPForms.2010-2013.min.js">
-      <DependentUpon>SPForms.2010-2013.js</DependentUpon>
-    </Content>
-    <Content Include="SPForms.2010.js">
-      <DependentUpon>SPForms.2010.js.bundle</DependentUpon>
-    </Content>
-    <Content Include="SPForms.2010.min.js">
-      <DependentUpon>SPForms.2010.js</DependentUpon>
-    </Content>
-    <Content Include="SPForms.2013.js">
-      <DependentUpon>SPForms.2013.js.bundle</DependentUpon>
-    </Content>
-    <Content Include="SPForms.2013.min.js">
-      <DependentUpon>SPForms.2013.js</DependentUpon>
-    </Content>
-    <Content Include="SPForms.2010.min.js.map">
-      <DependentUpon>SPForms.2010.min.js</DependentUpon>
-    </Content>
-    <Content Include="SPForms.2013.js.bundle">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="SPForms.2013.min.js.map">
-      <DependentUpon>SPForms.2013.min.js</DependentUpon>
-    </Content>
+    <Content Include="package.json" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Scripts\typings\jqueryui\jqueryui.d.ts" />

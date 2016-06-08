@@ -18,7 +18,8 @@ module SPForms.FormFields {
         Radio,
         DatePicker,
         PeoplePicker,
-        DropDown
+        DropDown,
+        CheckBox
     }
 
     export enum ProfileProperty {
@@ -49,6 +50,8 @@ module SPForms.FormFields {
                     return new DatePickerField(internalField);
                 case FormFieldType.DropDown:
                     return new DropDownField(internalField);
+                case FormFieldType.CheckBox:
+                    return new CheckBoxFormField(internalField);
                 case FormFieldType.Text:
                 default:
                     return new FormField(internalField);
@@ -65,6 +68,8 @@ module SPForms.FormFields {
             switch (type) {
                 case "radio":
                     return FormFieldType.Radio;
+                case "checkbox":
+                    return FormFieldType.CheckBox;
                 case "text":
                 default:
                     if (internalField.attr("data-form-peoplepicker") !== undefined)
@@ -171,6 +176,12 @@ module SPForms.FormFields {
         }
     }
 
+    export class CheckBoxFormField extends FormField {
+        get_value(): any {
+            return this.internalField.prop("checked");
+        }
+    }
+
     export class PeopleFormField extends FormField {
 
         private peoplePickerMode: number;
@@ -267,7 +278,7 @@ module SPForms.FormFields {
 
             var deferred = $.Deferred<void>();
 
-            SP.SOD.loadMultiple(['sp.js'],() => {
+            SP.SOD.loadMultiple(['sp.js'], () => {
                 var context = new SP.ClientContext();
                 var web = context.get_web();
                 var list = web.get_lists().getByTitle(this._list);
@@ -308,10 +319,10 @@ module SPForms.FormFields {
                         this._spValueCache.push(cacheItem);
                     }
                     deferred.resolve();
-                },(sender, args) => {
-                        this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
-                        deferred.reject(args.get_message());
-                    });
+                }, (sender, args) => {
+                    this.internalField.append('<option value="">ERROR: ' + args.get_message() + '</option>');
+                    deferred.reject(args.get_message());
+                });
             });
 
             return deferred.promise();
