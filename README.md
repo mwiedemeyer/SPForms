@@ -24,11 +24,11 @@ Just download the required files
 ----------------------------
 For SharePoint 2010:
 
-- [SPForms.2010.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2010.js) (or [SPForms.2010.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2010.min.js))
+- [SPForms.2010.js](https://github.com/mwiedemeyer/SPForms/releases) (or [SPForms.2010.min.js](https://github.com/mwiedemeyer/SPForms/releases))
 
 For SharePoint 2013:
 
-- [SPForms.2013.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2013.js) (or [SPForms.2013.min.js](https://raw.githubusercontent.com/mwiedemeyer/SPForms/master/SPForms/SPForms.2013.min.js))
+- [SPForms.2013.js](https://github.com/mwiedemeyer/SPForms/releases) (or [SPForms.2013.min.js](https://github.com/mwiedemeyer/SPForms/releases))
 
 
 How does it work
