@@ -180,6 +180,22 @@ module SPForms.FormFields {
         get_value(): any {
             return this.internalField.prop("checked");
         }
+
+        public validate(): boolean {
+            if (this.get_isrequired() && !this.get_value()) {
+                var validationMessage = this.internalField.attr("data-form-validationmessage") || "Required";
+                this.internalField.addClass("form-invalid");
+                this.internalField.tooltip({
+                    items: "[id=" + this.internalField.attr('ID') + "]",
+                    content: validationMessage,
+                    disabled: false
+                });
+
+                return false;
+            }
+
+            return true;
+        }
     }
 
     export class PeopleFormField extends FormField {
@@ -235,6 +251,10 @@ module SPForms.FormFields {
             else if (this.peoplePickerMode === 2013) {
                 return this.peoplePicker2013.getSelectedAccountName();
             }
+        }
+
+        public get_isrequired(): boolean {
+            return (this.internalField.attr("data-form-required") !== undefined && this.internalField.attr("data-form-required") === "true");
         }
     }
 
